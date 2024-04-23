@@ -77,6 +77,7 @@ function App() {
         setTurn={setTurn}
         setIsInCheck={setIsInCheck}
         setWinner={setWinner}
+        setTime={setTime}
       />
 
       <Table
