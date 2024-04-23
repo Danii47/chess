@@ -10,7 +10,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner 
   const draggingOverHandler = (evt) => {
     evt.preventDefault()
   }
-  console.log("Cargo celda")
+
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {
