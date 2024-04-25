@@ -23,14 +23,6 @@
   border-radius: 10px;
 }
 
-.chessCell {
-  box-sizing: border-box;
-  width: 100px;
-  height: 100px;
-  position: relative;
-  user-select: none;
-}
-
 [id="0"] {
   border-top-left-radius: 10px;
 }
@@ -46,6 +38,16 @@
 [id="63"] {
   border-bottom-right-radius: 10px;
 }
+
+.chessCell {
+  box-sizing: border-box;
+  width: 100px;
+  height: 100px;
+  position: relative;
+  user-select: none;
+  transition: border-width .08s ease-out, border-color .08s ease-out, background-color .08s ease-out;
+}
+
 
 .chessCell.isValidMove::after {
   content: "";
@@ -68,6 +70,10 @@
 
 .chessRow {
   display: flex;
+}
+
+.chessCell.eatable {
+  border: 2px solid rgba(93, 59, 4, 0.5);
 }
 
 .chessRowLabel {
