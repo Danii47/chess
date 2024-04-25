@@ -1,17 +1,20 @@
 import Row from "./Row"
 import Winner from "./Winner"
 import { useState } from "react"
+import confetti from 'canvas-confetti'
 
 import isValidMove from '../utils/isValidMove'
 import comprobateCheck from '../utils/comprobateCheck'
 import comprobateCheckMate from '../utils/comprobateCheckMate'
 import pieceMovedSound from '../assets/sounds/pieceMoved.mp3'
+import checkMateSound from '../assets/sounds/checkMate.webm'
 
 export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted }) {
   
   const [cellSelected, setCellSelected] = useState(null)
 
   const pieceMovedAudio = new Audio(pieceMovedSound)
+  const checkMateAudio = new Audio(checkMateSound)
 
   const onDropHandler = (evt, oldCellData = undefined) => {
     if (!oldCellData && !evt.dataTransfer.getData('cell')) return
@@ -40,11 +43,16 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     if ((isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)) || (!isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true))) return
 
-    pieceMovedAudio.play()
-
+    
     setIsInCheck(comprobateCheck(tableCopy, turn, true))
-
-    if (comprobateCheckMate(tableCopy, turn)) setWinner(turn)
+    
+    if (comprobateCheckMate(tableCopy, turn)) {
+      setWinner(turn)
+      checkMateAudio.play()
+      confetti()
+    } else {
+      pieceMovedAudio.play()
+    }
 
 
     setTable(tableCopy)
