@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 
-export default function Timer({ winner, setWinner, turn, time, setTime }) {
+export default function Timer({ winner, setWinner, turn, time, setTime, gameStarted }) {
 
 
 
   useEffect(() => {
 
-    if (winner) return
+    if (winner || !gameStarted) return
 
     const interval = setInterval(() => {
 
@@ -28,17 +28,14 @@ export default function Timer({ winner, setWinner, turn, time, setTime }) {
 
     return () => clearInterval(interval);
 
-  }, [winner, setWinner, turn, time, setTime])
-  
-
+  }, [winner, setWinner, turn, time, setTime, gameStarted])
   
   return (
     <div className="timer">
-      <div className="player shadow">
+      <div className={`player shadow${turn === "black" ? " active" : ""}`}>
         <div className="playerTime">{`${time.black.minutes >= 10 ? time.black.minutes : `0${time.black.minutes}`}`}:{`${time.black.seconds >= 10 ? time.black.seconds : `0${time.black.seconds}`}`}</div>
       </div>
-      <div className="player shadow">
-
+      <div className={`player shadow${turn === "white" ? " active" : ""}`}>
         <div className="playerTime">{`${time.white.minutes >= 10 ? time.white.minutes : `0${time.white.minutes}`}`}:{`${time.white.seconds >= 10 ? time.white.seconds : `0${time.white.seconds}`}`}</div>
       </div>
 
