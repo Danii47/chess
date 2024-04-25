@@ -1,3 +1,4 @@
+import comprobateCheck from "../utils/comprobateCheck"
 import getPieceImage from "../utils/getPieceImage"
 import isValidMove from "../utils/isValidMove"
 
@@ -28,6 +29,18 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     onDropHandler(evt, cellSelected)
   }
 
+  const isValidPossibleMove = (cell) => {
+    if (!cellSelected) return false
+    if (!isValidMove(table, cellSelected, cell, cellSelected.piece.color)) return false
+
+    const tableCopy = JSON.parse(JSON.stringify(table))
+    const oldCell = tableCopy.flat().find(cell => cell.id === cellSelected.id)
+    const newCell = tableCopy.flat().find(cellS => cellS.id === cell.id)
+    oldCell.piece = null
+    newCell.piece = cellSelected.piece
+    return !comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white')
+  }
+
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {
@@ -40,7 +53,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
       }
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${cellSelected && isValidMove(table, cellSelected, cell, cellSelected.piece.color) ? "isValidMove" : ""} ${cell.id === cellSelected?.id ? "selected" : ""}`}
+        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) ? "isValidMove" : ""} ${cell.id === cellSelected?.id ? "selected" : ""}`}
         onClick={(evt) => handleMovePiece(evt)}  
       >
         {
