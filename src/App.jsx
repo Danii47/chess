@@ -25,6 +25,7 @@ function App() {
       minutes: 2
     }
   })
+  
   const [table, setTable] = useState(startTable())
   const [turn, setTurn] = useState('white')
   const [isInCheck, setIsInCheck] = useState(false)
