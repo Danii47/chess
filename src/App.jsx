@@ -16,11 +16,11 @@ function App() {
   const [time, setTime] = useState({ 
     white: {
       seconds: 0,
-      minutes: 2
+      minutes: 3
     },
     black: {
       seconds: 0,
-      minutes: 2
+      minutes: 3
     }
   })
   const [table, setTable] = useState(startTable())
