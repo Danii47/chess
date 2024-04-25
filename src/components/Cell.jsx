@@ -16,11 +16,14 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     evt.preventDefault()
   }
 
-  const showPossibleMovements = (cellSelected) => {
+  const showPossibleMovements = (cellClicked) => {
+
     if (cell.piece.color !== turn) return
+    
     if (!gameStarted) setGameStarted(true)
 
-    setCellSelected(cellSelected)
+    if (cellSelected && cellSelected.id === cellClicked.id) setCellSelected(null)
+    else setCellSelected(cellClicked)
   }
 
   const handleMovePiece = (evt) => {
@@ -53,13 +56,13 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
       }
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) ? "isValidMove" : ""} ${cell.id === cellSelected?.id ? "selected" : ""}`}
+        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? "isValidMove" : ""} ${isValidPossibleMove(cell) && cell.piece ? "eatable" : ""} ${cell.id === cellSelected?.id ? "selected" : ""}`}
         onClick={(evt) => handleMovePiece(evt)}  
       >
         {
           cell.piece &&
           <img
-            className={`chessPiece${(cell.piece && cell.piece.check) ? " checked" : ""}${winner ? " end" : ""}`}
+            className={`chessPiece ${(cell.piece && cell.piece.check) ? "checked" : ""} ${winner ? "end" : ""}`}
             src={getPieceImage(cell.piece)} alt={`${cell.piece.type}`}
             onDragStart={(evt) => dragStartHandler(evt, cell)}
             onClick={() => showPossibleMovements(cell)}
