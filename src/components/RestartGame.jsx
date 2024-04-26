@@ -1,6 +1,6 @@
 import startTable from "../utils/startTable"
 
-export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner, setTime }) {
+export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner, setTime, setGameStarted }) {
   return (
     <div className="restartGameContainer">
       <button className="restartGame shadow" onClick={() => {
@@ -8,14 +8,15 @@ export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner
         setTurn('white')
         setIsInCheck(false)
         setWinner(null)
+        setGameStarted(false)
         setTime({
           white: {
             seconds: 0,
-            minutes: 2
+            minutes: 3
           },
           black: {
             seconds: 0,
-            minutes: 2
+            minutes: 3
           }
         })
 
