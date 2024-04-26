@@ -40,6 +40,7 @@ function App() {
         setIsInCheck={setIsInCheck}
         setWinner={setWinner}
         setTime={setTime}
+        setGameStarted={setGameStarted}
       />
 
       <Table
