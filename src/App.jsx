@@ -29,6 +29,7 @@ function App() {
   const [isInCheck, setIsInCheck] = useState(false)
   const [winner, setWinner] = useState(undefined)
   const [gameStarted, setGameStarted] = useState(false)
+  
 
   
   return (
