@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import _ from "lodash"
 import comprobateCheck from "../utils/comprobateCheck"
 import getPieceImage from "../utils/getPieceImage"
 import isValidMove from "../utils/isValidMove"
@@ -37,7 +37,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     if (!cellSelected) return false
     if (!isValidMove(table, cellSelected, cell, cellSelected.piece.color)) return false
 
-    const tableCopy = JSON.parse(JSON.stringify(table))
+    const tableCopy = _.cloneDeep(table)
     const oldCell = tableCopy.flat().find(cell => cell.id === cellSelected.id)
     const newCell = tableCopy.flat().find(cellS => cellS.id === cell.id)
     oldCell.piece = null
@@ -45,31 +45,6 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     return !comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white')
   }
 
-  useEffect(() => {
-    if (turn === "white") return
-
-    const allPosibleMoves = getAllPossibleMoves(table)
-    console.log({ allPosibleMoves })
-    
-    // eslint-disable-next-line
-  }, [turn])
-
-
-  const getAllPossibleMoves = (table) => {
-    const allPosibleMoves = []
-    table.flat().forEach(cell => {
-      if (cell.piece && cell.piece.color === "black") {
-        const possibleMoves = cell.piece.getPossibleMoves(cell, table)
-        possibleMoves.forEach(cellToMove => {
-          
-          allPosibleMoves.push({ from: cell, to: cellToMove })
-          
-        })
-      }
-    })
-
-    return allPosibleMoves
-  }
 
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
