@@ -12,11 +12,11 @@ export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner
         setTime({
           white: {
             seconds: 0,
-            minutes: 3
+            minutes: 120
           },
           black: {
             seconds: 0,
-            minutes: 3
+            minutes: 120
           }
         })
 

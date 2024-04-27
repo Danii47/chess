@@ -16,11 +16,11 @@ function App() {
   const [time, setTime] = useState({ 
     white: {
       seconds: 0,
-      minutes: 3
+      minutes: 120
     },
     black: {
       seconds: 0,
-      minutes: 3
+      minutes: 120
     }
   })
   
