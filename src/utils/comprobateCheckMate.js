@@ -1,5 +1,6 @@
 import comprobateCheck from "./comprobateCheck"
 import isValidMove from "./isValidMove"
+import _ from 'lodash'
 
 export default function comprobateCheckMate(table, turn) {
   const piecesCellsArray = table.flat().filter(cell => cell.piece && cell.piece.color !== turn)
@@ -14,7 +15,7 @@ export default function comprobateCheckMate(table, turn) {
 
           const pieceMoved = table[oldY][oldX].piece
 
-          const tableCopy = JSON.parse(JSON.stringify(table))
+          const tableCopy = _.cloneDeep(table)
 
           tableCopy[oldY][oldX].piece = null
           tableCopy[newY][newX].piece = pieceMoved
