@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.2",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-spring": "^9.7.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
