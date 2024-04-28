@@ -13,7 +13,7 @@ import RestartGame from './components/RestartGame'
 
 function App() {
 
-  const [time, setTime] = useState({ 
+  const [time, setTime] = useState({
     white: {
       seconds: 0,
       minutes: 120
@@ -23,18 +23,19 @@ function App() {
       minutes: 120
     }
   })
-  
+
   const [table, setTable] = useState(startTable())
   const [turn, setTurn] = useState('white')
   const [isInCheck, setIsInCheck] = useState(false)
   const [winner, setWinner] = useState(undefined)
   const [gameStarted, setGameStarted] = useState(false)
-  
+  const [IAOpponent, setIAOpponent] = useState(false)
 
-  
+
+
   return (
     <div className='gameContainer'>
-        
+
       <RestartGame
         setTable={setTable}
         setTurn={setTurn}
@@ -42,6 +43,7 @@ function App() {
         setWinner={setWinner}
         setTime={setTime}
         setGameStarted={setGameStarted}
+        setIAOpponent={setIAOpponent}
       />
 
       <Table
@@ -55,6 +57,7 @@ function App() {
         setIsInCheck={setIsInCheck}
         gameStarted={gameStarted}
         setGameStarted={setGameStarted}
+        IAOpponent={IAOpponent}
       />
 
       <Timer
@@ -64,8 +67,10 @@ function App() {
         time={time}
         setTime={setTime}
         gameStarted={gameStarted}
+        IAOpponent={IAOpponent}
+        setIAOpponent={setIAOpponent}
       />
-      
+
     </div>
   )
 }

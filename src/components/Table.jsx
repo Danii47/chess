@@ -13,7 +13,7 @@ import captureSound from '../assets/sounds/capture.mp3'
 import checkSound from '../assets/sounds/check.mp3'
 import getRandomValue from "../utils/getRandomValue"
 
-export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted }) {
+export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent }) {
 
   const [cellSelected, setCellSelected] = useState(null)
 
@@ -83,41 +83,21 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
   useEffect(() => {
 
-    if (turn === "white" || winner) return
+    if (turn === "white" || winner || !IAOpponent) return
 
     setTimeout(() => {
 
       const tableCopy = _.cloneDeep(table)
 
-
-      // Dibujar el tablero en la terminal
-      console.log(tableCopy.map(row => row.map(cell => cell.piece ? cell.piece.type[0] : " ")))
-
-      let allPossibleMoves = getAllPossibleMoves(tableCopy, "black", isInCheck)
-
-      allPossibleMoves = addBestOponentMovesPoints(allPossibleMoves, "white", isInCheck)
-
-      console.log({allPossibleMoves})
-
-      allPossibleMoves = allPossibleMoves
-        .filter(move => move.opponentPoints === Math.max(...allPossibleMoves.map(move => move.opponentPoints)))
-        
-
-      const bestPossibleMoves = allPossibleMoves
-        .filter(move => move.points === Math.max(...allPossibleMoves.map(move => move.points)))
-
-
-      console.log({bestPossibleMoves})
-
-    
-
+      const allPossibleMoves = getAllPossibleMoves(tableCopy, "black", isInCheck, 3)
+      const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
 
       const [fromY, fromX] = [getRandomPossibleMove.from.y, getRandomPossibleMove.from.x]
       const [toY, toX] = [getRandomPossibleMove.to.y, getRandomPossibleMove.to.x]
       const pieceMoved = tableCopy[fromY][fromX].piece
-      
+
       const newCellPiece = _.cloneDeep(tableCopy[toY][toX].piece)
 
       tableCopy[fromY][fromX].piece = null
@@ -150,64 +130,94 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       } else {
         pieceMovedAudio.play()
       }
-      console.log("Actualizo el tablero")
+
       setTable(tableCopy)
       setTurn('white')
-    }, 1000);
+
+    }, 1000 * (Math.random() * 5));
 
 
     // eslint-disable-next-line
-  }, [turn])
+  }, [turn, IAOpponent])
 
 
 
-  const addBestOponentMovesPoints = (bestPossibleMoves, color, isInCheck) => {
-      
+  const getBestPossibleMoves = (allPossibleMoves) => {
 
-  
-      return bestPossibleMoves.map(move => {
-  
-        const tableCopy = _.cloneDeep(move.table)
-  
-        const allPossibleMoves = getAllPossibleMoves(tableCopy, color, isInCheck)
-  
-        return { ...move, opponentPoints: Math.min(...allPossibleMoves.map(move => move.points)) }
-  
+    // It could have been created with recursion but since I want to set the depth to 3, I leave it as follows
+
+    allPossibleMoves.forEach((IAMovesDepth1) => {
+
+      IAMovesDepth1.nextMoves.forEach((OpponentMovesDepth2) => {
+
+        const depth3MaxValue = Math.max(...OpponentMovesDepth2.nextMoves.map(IAMovesDepth3 => IAMovesDepth3.points))
+        OpponentMovesDepth2.maxPointsDeeper = depth3MaxValue
       })
-  
 
-  
-    }
+      const depth2MinValue = Math.min(...IAMovesDepth1.nextMoves.map(OpponentMovesDepth2 => OpponentMovesDepth2.maxPointsDeeper))
+      IAMovesDepth1.minPointsDeeper = depth2MinValue
+    })
+
+    const movesFiltered = allPossibleMoves.filter(IAMovesDepth1 => IAMovesDepth1.minPointsDeeper === Math.max(...allPossibleMoves.map((IADepth1 => IADepth1.minPointsDeeper))))
+
+    return movesFiltered
+  }
 
 
-  const getAllPossibleMoves = (table, color, isInCheck) => {
+
+  const getAllPossibleMoves = (table, color, isInCheck, depth) => {
+
+    if (depth === 0) return null
 
     const allPosibleMoves = []
+
+
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
         const possibleMoves = cell.piece.getPossibleMoves(table, cell)
-        
-        possibleMoves.forEach(cellToMove => {
-          
+
+        for (const cellToMove of possibleMoves) {
+
           const tableCopy = _.cloneDeep(table)
 
-          const movePoints = cellToMove.piece ? cellToMove.piece.points() : 0
 
           tableCopy[cell.y][cell.x].piece = null
           tableCopy[cellToMove.y][cellToMove.x].piece = cell.piece
-          
 
-          if ((isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false)) || (!isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false))) return
+          if ((isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false)) || (!isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false))) continue
 
-          allPosibleMoves.push({ from: cell, to: cellToMove, points: movePoints, table: tableCopy })
+          allPosibleMoves.push({
+            from: cell,
+            to: cellToMove,
+            points: evaluateBoard(table),
+            table: tableCopy,
+            nextMoves: getAllPossibleMoves(
+              tableCopy,
+              color === "black" ? "white" : "black",
+              false,
+              depth - 1
+            ),
+          })
 
-        })
+        }
       }
     })
 
-    return allPosibleMoves
+    //return allPosibleMoves
 
+    return allPosibleMoves
   }
+
+  const evaluateBoard = (board) => {
+    let totalEvaluation = 0;
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (board[j][i].piece) totalEvaluation += board[j][i].piece.points()
+      }
+    }
+    return totalEvaluation;
+  };
+
 
   return (
 
