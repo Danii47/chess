@@ -25,7 +25,7 @@ export default function startTable() {
         check: false,
         hasMoved: false,
         points() {
-          return this.color === "white" ? PIECES_POINTS[this.type] : -PIECES_POINTS[this.type]
+          return this.color === "black" ? PIECES_POINTS[this.type] : -PIECES_POINTS[this.type]
         },
         getPossibleMoves(table, cell) {
 
