@@ -1,4 +1,5 @@
-import startTable from "../utils/startTable"
+import startTable from '../utils/startTable'
+import { resetGameStorage } from '../utils/storage'
 
 export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner, setTime, setGameStarted }) {
   return (
@@ -19,6 +20,8 @@ export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner
             minutes: 120
           }
         })
+        
+        resetGameStorage()
 
       }}>Reiniciar juego</button>
     </div>
