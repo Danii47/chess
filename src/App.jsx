@@ -25,7 +25,7 @@ function App() {
     const boardFromStorage = window.localStorage.getItem('table')
     if (!boardFromStorage) return startTable()
 
-    return setBoardFunctions(JSON.parse(boardFromStorage)) // setBoardFunctions is a function that adds the functions to the pieces
+    return setBoardFunctions(JSON.parse(boardFromStorage)) // setBoardFunctions is a function that adds the functions to the pieces cause JSON.parse removes them
   })
 
   const [turn, setTurn] = useState(() => {
