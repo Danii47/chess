@@ -150,6 +150,29 @@
   box-shadow: 1px 0px 10px 0px rgba(255, 255, 255, 0.6);
 }
 
+.activateIA {
+  margin-top: 10px;
+  padding: 6%;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: #323232;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease-out;
+}
+
+.activateIA:hover {
+  background-color: #3a3a3a;
+}
+
+.activateIA:active {
+  background-color: #212121;
+}
+
+.activateIA.activated {
+  background-color: #212121;
+}
+
 .restartGameContainer {
   width: 150px;
 }
