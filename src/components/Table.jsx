@@ -13,6 +13,7 @@ import captureSound from '../assets/sounds/capture.mp3'
 import checkSound from '../assets/sounds/check.mp3'
 import getRandomValue from '../utils/getRandomValue'
 import changePiecesPosition from '../utils/changePiecesPosition'
+import { saveGameToStorage } from '../utils/storage'
 
 export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent }) {
 
@@ -43,7 +44,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     setCellSelected(null)
 
-    const newCellPiece = newCell.piece
+    const newCellPiece = Boolean(newCell.piece)
 
     changePiecesPosition(tableCopy, oldCell, newCell)
 
@@ -75,9 +76,12 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       pieceMovedAudio.play()
     }
 
+    const nextTurn = turn === 'white' ? 'black' : 'white'
 
     setTable(tableCopy)
-    setTurn(turn === 'white' ? 'black' : 'white')
+    setTurn(nextTurn)
+
+    saveGameToStorage(tableCopy, nextTurn)
   }
 
   useEffect(() => {
@@ -89,20 +93,16 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       const tableCopy = _.cloneDeep(table)
 
       const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
+      console.log({ allPossibleMoves })
       const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
 
-      console.log({bestPossibleMoves})
+      console.log({ bestPossibleMoves })
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
 
-      const [fromY, fromX] = [getRandomPossibleMove.from.y, getRandomPossibleMove.from.x]
-      const [toY, toX] = [getRandomPossibleMove.to.y, getRandomPossibleMove.to.x]
-      const pieceMoved = tableCopy[fromY][fromX].piece
+      const newCellPiece = Boolean(getRandomPossibleMove.to.piece)
 
-      const newCellPiece = _.cloneDeep(tableCopy[toY][toX].piece)
-
-      tableCopy[fromY][fromX].piece = null
-      tableCopy[toY][toX].piece = pieceMoved
+      changePiecesPosition(tableCopy, getRandomPossibleMove.from, getRandomPossibleMove.to)
 
       comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)
 
@@ -132,10 +132,14 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
         pieceMovedAudio.play()
       }
 
-      setTable(tableCopy)
-      setTurn('white')
+      const nextTurn = turn === 'white' ? 'black' : 'white'
 
-    }, 1000 * (Math.random() * 5));
+      setTable(tableCopy)
+      setTurn(nextTurn)
+
+      saveGameToStorage(tableCopy, nextTurn)
+
+    }, 1000 /** (Math.random() * 5)*/);
 
 
     // eslint-disable-next-line
@@ -182,11 +186,9 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
           const tableCopy = _.cloneDeep(table)
 
 
-          tableCopy[cell.y][cell.x].piece = null
-          tableCopy[cellToMove.y][cellToMove.x].piece = cell.piece
+          changePiecesPosition(tableCopy, cell, cellToMove)
 
           if ((isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false)) || (!isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false))) continue
-
           allPosibleMoves.push({
             from: cell,
             to: cellToMove,
@@ -203,7 +205,6 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
         }
       }
     })
-
     return allPosibleMoves
   }
 
@@ -211,8 +212,8 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     let totalEvaluation = 0;
     board.flat().forEach((cell) => {
 
-        if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
-  
+      if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
+
     })
     return totalEvaluation;
   };
