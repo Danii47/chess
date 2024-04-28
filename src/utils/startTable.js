@@ -1,6 +1,6 @@
 import startPieces from './startPieces'
-import isValidMove from './isValidMove'
-import { PIECES_POINTS, PIECES_POSITION_POINTS } from '../constants/pieces'
+import { points, extraPositionPoints } from './points'
+import getPossibleMoves from './getPossibleMoves'
 
 export default function startTable() {
   const table = []
@@ -16,22 +16,8 @@ export default function startTable() {
         color: i < 2 ? 'black' : 'white',
         check: false,
         hasMoved: false,
-        points() {
-
-          return this.color === 'black' ? PIECES_POINTS[this.type] : -PIECES_POINTS[this.type]
-        },
-        getPossibleMoves(table, cell) {
-
-          const possibleMoves = []
-
-          table.flat().forEach(cellToMove => {
-            if (isValidMove(table, cell, cellToMove, this.color)) {
-              possibleMoves.push(cellToMove)
-            }
-          })
-
-          return possibleMoves
-        }
+        points,
+        getPossibleMoves
       }
 
       row.push({
@@ -40,9 +26,7 @@ export default function startTable() {
         y: i,
         cellColor: (i + j) % 2 === 0 ? 'black' : 'white',
         piece: piece,
-        extraPositionPoints() {
-          return !this.piece ? 0 : PIECES_POSITION_POINTS[this.piece.type][this.piece.color][this.y][this.x]
-        }
+        extraPositionPoints
       })
 
     }
