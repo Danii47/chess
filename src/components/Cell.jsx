@@ -45,7 +45,6 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     return !comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white')
   }
 
-
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {
