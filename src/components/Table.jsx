@@ -12,6 +12,7 @@ import checkMateSound from '../assets/sounds/checkMate.webm'
 import captureSound from '../assets/sounds/capture.mp3'
 import checkSound from '../assets/sounds/check.mp3'
 import getRandomValue from '../utils/getRandomValue'
+import changePiecesPosition from '../utils/changePiecesPosition'
 
 export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent }) {
 
@@ -38,16 +39,14 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
 
     if (!isValidMove(tableCopy, oldCell, newCell, turn)) return
-    setCellSelected(null)
 
-    const [oldX, oldY] = [oldCell.x, oldCell.y]
-    const [newX, newY] = [newCell.x, newCell.y]
-    const pieceMoved = tableCopy[oldY][oldX].piece
+
+    setCellSelected(null)
 
     const newCellPiece = newCell.piece
 
-    tableCopy[oldY][oldX].piece = null
-    tableCopy[newY][newX].piece = pieceMoved
+    changePiecesPosition(tableCopy, oldCell, newCell)
+
 
     if ((isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)) || (!isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true))) return
 
@@ -91,6 +90,8 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
       const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
       const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
+
+      console.log({bestPossibleMoves})
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
 
@@ -203,18 +204,16 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       }
     })
 
-    //return allPosibleMoves
-
     return allPosibleMoves
   }
 
   const evaluateBoard = (board) => {
     let totalEvaluation = 0;
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (board[j][i].piece) totalEvaluation += board[j][i].piece.points()
-      }
-    }
+    board.flat().forEach((cell) => {
+
+        if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
+  
+    })
     return totalEvaluation;
   };
 
