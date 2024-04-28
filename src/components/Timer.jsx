@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function Timer({ winner, setWinner, turn, time, setTime, gameStarted, IAOpponent, setIAOpponent }) {
 
@@ -35,15 +35,15 @@ export default function Timer({ winner, setWinner, turn, time, setTime, gameStar
   }
 
   return (
-    <div className="timer">
+    <div className='timer'>
       <div>
-        <div className={`player shadow${turn === "black" ? " active" : ""}`}>
-          <div className="playerTime">{`${time.black.minutes >= 10 ? time.black.minutes : `0${time.black.minutes}`}`}:{`${time.black.seconds >= 10 ? time.black.seconds : `0${time.black.seconds}`}`}</div>
+        <div className={`player shadow${turn === 'black' ? ' active' : ''}`}>
+          <div className='playerTime'>{`${time.black.minutes >= 10 ? time.black.minutes : `0${time.black.minutes}`}`}:{`${time.black.seconds >= 10 ? time.black.seconds : `0${time.black.seconds}`}`}</div>
         </div>
-        <button type="checkbox" className={`activateIA ${IAOpponent ? "activated" : ""}`} onClick={handleActivateIA}>{IAOpponent ? "Desactivar" : "Activar"} IA</button>
+        <button type='checkbox' className={`activateIA ${IAOpponent ? 'activated' : ''}`} onClick={handleActivateIA}>{IAOpponent ? 'Desactivar' : 'Activar'} IA</button>
       </div>
-      <div className={`player shadow${turn === "white" ? " active" : ""}`}>
-        <div className="playerTime">{`${time.white.minutes >= 10 ? time.white.minutes : `0${time.white.minutes}`}`}:{`${time.white.seconds >= 10 ? time.white.seconds : `0${time.white.seconds}`}`}</div>
+      <div className={`player shadow${turn === 'white' ? ' active' : ''}`}>
+        <div className='playerTime'>{`${time.white.minutes >= 10 ? time.white.minutes : `0${time.white.minutes}`}`}:{`${time.white.seconds >= 10 ? time.white.seconds : `0${time.white.seconds}`}`}</div>
       </div>
 
     </div>

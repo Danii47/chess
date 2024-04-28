@@ -1,15 +1,11 @@
 import { useState } from 'react'
-import './App.css'
 
 import Table from './components/Table'
-
 import startTable from './utils/startTable'
-
-
-
 import Timer from './components/Timer'
-
 import RestartGame from './components/RestartGame'
+
+import './App.css'
 
 function App() {
 
@@ -30,7 +26,6 @@ function App() {
   const [winner, setWinner] = useState(undefined)
   const [gameStarted, setGameStarted] = useState(false)
   const [IAOpponent, setIAOpponent] = useState(false)
-
 
 
   return (

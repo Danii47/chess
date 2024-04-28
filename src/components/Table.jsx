@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
-import Row from "./Row"
-import Winner from "./Winner"
+import { useEffect, useState } from 'react'
+import Row from './Row'
+import Winner from './Winner'
 import confetti from 'canvas-confetti'
 import _ from 'lodash'
 
@@ -11,7 +11,7 @@ import pieceMovedSound from '../assets/sounds/pieceMoved.mp3'
 import checkMateSound from '../assets/sounds/checkMate.webm'
 import captureSound from '../assets/sounds/capture.mp3'
 import checkSound from '../assets/sounds/check.mp3'
-import getRandomValue from "../utils/getRandomValue"
+import getRandomValue from '../utils/getRandomValue'
 
 export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent }) {
 
@@ -83,13 +83,13 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
   useEffect(() => {
 
-    if (turn === "white" || winner || !IAOpponent) return
+    if (turn === 'white' || winner || !IAOpponent) return
 
     setTimeout(() => {
 
       const tableCopy = _.cloneDeep(table)
 
-      const allPossibleMoves = getAllPossibleMoves(tableCopy, "black", isInCheck, 3)
+      const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
       const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
@@ -184,7 +184,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
           tableCopy[cell.y][cell.x].piece = null
           tableCopy[cellToMove.y][cellToMove.x].piece = cell.piece
 
-          if ((isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false)) || (!isInCheck && comprobateCheck(tableCopy, color === "black" ? "white" : "black", false))) continue
+          if ((isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false)) || (!isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false))) continue
 
           allPosibleMoves.push({
             from: cell,
@@ -193,7 +193,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
             table: tableCopy,
             nextMoves: getAllPossibleMoves(
               tableCopy,
-              color === "black" ? "white" : "black",
+              color === 'black' ? 'white' : 'black',
               false,
               depth - 1
             ),
@@ -221,7 +221,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
   return (
 
-    <div className="chessTable shadow">
+    <div className='chessTable shadow'>
       {
         winner &&
         <Winner winner={winner} />

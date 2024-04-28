@@ -1,7 +1,7 @@
-import _ from "lodash"
-import comprobateCheck from "../utils/comprobateCheck"
-import getPieceImage from "../utils/getPieceImage"
-import isValidMove from "../utils/isValidMove"
+import _ from 'lodash'
+import comprobateCheck from '../utils/comprobateCheck'
+import getPieceImage from '../utils/getPieceImage'
+import isValidMove from '../utils/isValidMove'
 
 export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted }) {
 
@@ -49,21 +49,21 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {
         (cellIndex === 0) &&
-        <div className="chessRowLabel">{8 - rowIndex}</div>
+        <div className='chessRowLabel'>{8 - rowIndex}</div>
       }
       {
         (rowIndex === 7) &&
-        <div style={{ right: `${cellIndex * 100}px` }} className="chessColLabel">{String.fromCharCode("A".charCodeAt(0) + (7 - cellIndex))}</div>
+        <div style={{ right: `${cellIndex * 100}px` }} className='chessColLabel'>{String.fromCharCode('A'.charCodeAt(0) + (7 - cellIndex))}</div>
       }
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? "isValidMove" : ""} ${isValidPossibleMove(cell) && cell.piece ? "eatable" : ""} ${cell.id === cellSelected?.id ? "selected" : ""}`}
+        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''}`}
         onClick={(evt) => handleMovePiece(evt)}  
       >
         {
           cell.piece &&
           <img
-            className={`chessPiece ${(cell.piece && cell.piece.check) ? "checked" : ""} ${winner ? "end" : ""}`}
+            className={`chessPiece ${(cell.piece && cell.piece.check) ? 'checked' : ''} ${winner ? 'end' : ''}`}
             src={getPieceImage(cell.piece)} alt={`${cell.piece.type}`}
             onDragStart={(evt) => dragStartHandler(evt, cell)}
             onClick={() => showPossibleMovements(cell)}

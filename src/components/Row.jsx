@@ -2,7 +2,7 @@ import Cell from './Cell'
 
 export default function Row({ row, rowIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted }) {
   return (
-    <div className="chessRow">
+    <div className='chessRow'>
       {
         row.map((cell, cellIndex) => {
           return <Cell 
