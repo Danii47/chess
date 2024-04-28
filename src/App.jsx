@@ -6,22 +6,32 @@ import Timer from './components/Timer'
 import RestartGame from './components/RestartGame'
 
 import './App.css'
+import setBoardFunctions from './utils/setBoardFunctions'
+import createTimeObject from './utils/createTimeObject'
+
 
 function App() {
 
-  const [time, setTime] = useState({
-    white: {
-      seconds: 0,
-      minutes: 120
-    },
-    black: {
-      seconds: 0,
-      minutes: 120
-    }
+  const [time, setTime] = useState(() => {
+
+    const timeFromStorage = window.localStorage.getItem('time')
+    if (timeFromStorage) return JSON.parse(timeFromStorage)
+
+    return createTimeObject(0, 120)
   })
 
-  const [table, setTable] = useState(startTable())
-  const [turn, setTurn] = useState('white')
+  const [table, setTable] = useState(() => {
+
+    const boardFromStorage = window.localStorage.getItem('table')
+    if (!boardFromStorage) return startTable()
+
+    return setBoardFunctions(JSON.parse(boardFromStorage)) // setBoardFunctions is a function that adds the functions to the pieces
+  })
+
+  const [turn, setTurn] = useState(() => {
+    return window.localStorage.getItem('turn') ?? 'white'
+  })
+
   const [isInCheck, setIsInCheck] = useState(false)
   const [winner, setWinner] = useState(undefined)
   const [gameStarted, setGameStarted] = useState(false)
