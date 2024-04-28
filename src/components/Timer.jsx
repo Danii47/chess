@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { updateTimeInStorage } from '../utils/storage'
+
 
 export default function Timer({ winner, setWinner, turn, time, setTime, gameStarted, IAOpponent, setIAOpponent }) {
 
@@ -23,7 +25,13 @@ export default function Timer({ winner, setWinner, turn, time, setTime, gameStar
 
       if (newSeconds === 0 && newMinutes === 0) setWinner(turn === 'white' ? 'black' : 'white')
 
-
+      updateTimeInStorage({
+        ...time,
+        [turn]: {
+          seconds: newSeconds,
+          minutes: newMinutes
+        }
+      })
     }, 1000);
 
     return () => clearInterval(interval);
