@@ -17,7 +17,7 @@ function App() {
     const timeFromStorage = window.localStorage.getItem('time')
     if (timeFromStorage) return JSON.parse(timeFromStorage)
 
-    return createTimeObject(0, 120)
+    return createTimeObject({ minutes: 120 })
   })
 
   const [table, setTable] = useState(() => {
