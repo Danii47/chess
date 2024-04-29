@@ -1,6 +1,6 @@
 import Cell from './Cell'
 
-export default function Row({ row, rowIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted, lastMove }) {
+export default function Row({ row, rowIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, gameStarted, setGameStarted, lastMove }) {
   return (
     <div className='chessRow'>
       {
@@ -19,6 +19,7 @@ export default function Row({ row, rowIndex, onDropHandler, winner, table, cellS
               gameStarted={gameStarted}
               setGameStarted={setGameStarted}
               lastMove={lastMove}
+              isInCheck={isInCheck}
             />
         })
       }

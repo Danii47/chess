@@ -1,9 +1,6 @@
-import _ from 'lodash'
-import comprobateCheck from '../utils/comprobateCheck'
 import getPieceImage from '../utils/getPieceImage'
-import isValidMove from '../utils/isValidMove'
 
-export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted, lastMove }) {
+export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, gameStarted, setGameStarted, lastMove }) {
 
   const dragStartHandler = (evt, cell) => {
     if (cell.piece.color !== turn) return
@@ -35,16 +32,12 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
 
   const isValidPossibleMove = (cell) => {
     if (!cellSelected) return false
-    if (!isValidMove(table, cellSelected, cell, cellSelected.piece.color)) return false
 
-    const tableCopy = _.cloneDeep(table)
-    const oldCell = tableCopy.flat().find(cell => cell.id === cellSelected.id)
-    const newCell = tableCopy.flat().find(cellS => cellS.id === cell.id)
-    oldCell.piece = null
-    newCell.piece = cellSelected.piece
-    return !comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white')
+    const possibleMoves = cellSelected.piece.getPossibleMoves(table, cellSelected, turn, isInCheck)
+    
+    return possibleMoves.some((cellToMove) => cellToMove.id === cell.id)
   }
-  console.log(lastMove)
+
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {

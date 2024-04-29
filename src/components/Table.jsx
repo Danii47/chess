@@ -183,7 +183,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
-        const possibleMoves = cell.piece.getPossibleMoves(table, cell, isInCheck)
+        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
 
         for (const cellToMove of possibleMoves) {
 
@@ -244,6 +244,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
             gameStarted={gameStarted}
             setGameStarted={setGameStarted}
             lastMove={lastMove}
+            isInCheck={isInCheck}
           />
 
         })
