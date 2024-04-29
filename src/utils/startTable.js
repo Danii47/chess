@@ -24,7 +24,7 @@ export default function startTable() {
         id: 8 * i + j,
         x: j,
         y: i,
-        cellColor: (i + j) % 2 === 0 ? 'black' : 'white',
+        cellColor: (i + j) % 2 === 0 ? 'white' : 'black',
         piece: piece,
         extraPositionPoints
       })
