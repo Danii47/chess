@@ -39,7 +39,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     })
 
 
-    if (!isValidMove(tableCopy, oldCell, newCell, turn)) return
+    if (!isValidMove(tableCopy, oldCell, newCell, turn, isInCheck)) return
 
 
     setCellSelected(null)
@@ -139,7 +139,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
       saveGameToStorage(tableCopy, nextTurn)
 
-    }, 1000 /** (Math.random() * 5)*/);
+    }, 1000 * (Math.random() * 5));
 
 
     // eslint-disable-next-line
@@ -179,7 +179,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
-        const possibleMoves = cell.piece.getPossibleMoves(table, cell)
+        const possibleMoves = cell.piece.getPossibleMoves(table, cell, isInCheck)
 
         for (const cellToMove of possibleMoves) {
 

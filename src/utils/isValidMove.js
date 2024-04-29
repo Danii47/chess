@@ -1,7 +1,6 @@
 import comprobateMiddlePieces from './comprobateMiddlePieces'
-import comprobateCheck from './comprobateCheck'
 
-export default function isValidMove(table, oldCell, newCell, turn) {
+export default function isValidMove(table, oldCell, newCell, turn, isInCheck) {
   if (oldCell.x === newCell.x && oldCell.y === newCell.y) return false
   if (oldCell.piece.color !== turn) return false
   if (newCell.piece && newCell.piece.color === oldCell.piece.color) return false
@@ -9,7 +8,7 @@ export default function isValidMove(table, oldCell, newCell, turn) {
   switch (oldCell.piece.type) {
     case 'king':
       if (Math.abs(oldCell.x - newCell.x) <= 1 && Math.abs(oldCell.y - newCell.y) <= 1) return true
-      if (oldCell.y === newCell.y && Math.abs(oldCell.x - newCell.x) === 2 && !comprobateCheck(table, turn === 'white' ? 'black' : 'white')) {
+      if (oldCell.y === newCell.y && Math.abs(oldCell.x - newCell.x) === 2 && !isInCheck) {
         if (oldCell.x + 2 === newCell.x && !oldCell.piece.hasMoved && table[oldCell.y][7].piece && !table[oldCell.y][7].piece.hasMoved && !comprobateMiddlePieces(table, oldCell, table[oldCell.y][7], 'horizontal')) return true
         if (oldCell.x - 2 === newCell.x && !oldCell.piece.hasMoved && table[oldCell.y][0].piece && !table[oldCell.y][0].piece.hasMoved && !comprobateMiddlePieces(table, oldCell, table[oldCell.y][0], 'horizontal')) return true
       }
