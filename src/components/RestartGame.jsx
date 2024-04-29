@@ -1,7 +1,7 @@
 import startTable from '../utils/startTable'
 import { resetGameStorage } from '../utils/storage'
 
-export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner, setTime, setGameStarted }) {
+export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner, setTime, setGameStarted, setLastMove }) {
   return (
     <div className="restartGameContainer">
       <button className="restartGame shadow" onClick={() => {
@@ -21,6 +21,7 @@ export default function RestartGame({ setTable, setTurn, setIsInCheck, setWinner
           }
         })
         
+        setLastMove(null)
         resetGameStorage()
 
       }}>Reiniciar juego</button>

@@ -68,13 +68,28 @@
   border: 2px solid rgb(0 0 0 / .2);
 }
 
+.chessCell.eatable {
+  border: 3px solid rgba(84, 53, 3, 0.5);
+
+}
+
+.chessCell.lastMove::after {
+  position:  absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+
+  content: "";
+  z-index: 0;
+  background-color: rgba(0, 0, 0, 0.20);
+}
+
 .chessRow {
   display: flex;
 }
 
-.chessCell.eatable {
-  border: 2px solid rgba(93, 59, 4, 0.5);
-}
 
 .chessRowLabel {
   width: 50px;
@@ -101,6 +116,8 @@
 }
 
 .chessPiece {
+  position: absolute;
+  z-index: 1;
   mask-image: radial-gradient(black 70%, transparent 80%);
   width: 100%;
   height: 100%;

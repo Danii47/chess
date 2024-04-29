@@ -36,6 +36,7 @@ function App() {
   const [winner, setWinner] = useState(undefined)
   const [gameStarted, setGameStarted] = useState(false)
   const [IAOpponent, setIAOpponent] = useState(false)
+  const [lastMove, setLastMove] = useState(null)
 
 
   return (
@@ -49,6 +50,7 @@ function App() {
         setTime={setTime}
         setGameStarted={setGameStarted}
         setIAOpponent={setIAOpponent}
+        setLastMove={setLastMove}
       />
 
       <Table
@@ -63,6 +65,8 @@ function App() {
         gameStarted={gameStarted}
         setGameStarted={setGameStarted}
         IAOpponent={IAOpponent}
+        lastMove={lastMove}
+        setLastMove={setLastMove}
       />
 
       <Timer

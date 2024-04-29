@@ -3,7 +3,7 @@ import comprobateCheck from '../utils/comprobateCheck'
 import getPieceImage from '../utils/getPieceImage'
 import isValidMove from '../utils/isValidMove'
 
-export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted }) {
+export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, gameStarted, setGameStarted, lastMove }) {
 
   const dragStartHandler = (evt, cell) => {
     if (cell.piece.color !== turn) return
@@ -44,7 +44,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
     newCell.piece = cellSelected.piece
     return !comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white')
   }
-
+  console.log(lastMove)
   return (
     <div onDragOver={(evt) => draggingOverHandler(evt)} onDrop={(evt) => onDropHandler(evt)}>
       {
@@ -57,7 +57,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
       }
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''}`}
+        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''} ${lastMove?.from.id === cell.id || lastMove?.to.id === cell.id ? 'lastMove' : ''}`}
         onClick={(evt) => handleMovePiece(evt)}  
       >
         {

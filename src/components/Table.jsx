@@ -15,7 +15,7 @@ import getRandomValue from '../utils/getRandomValue'
 import changePiecesPosition from '../utils/changePiecesPosition'
 import { saveGameToStorage } from '../utils/storage'
 
-export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent }) {
+export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove}) {
 
   const [cellSelected, setCellSelected] = useState(null)
 
@@ -76,6 +76,8 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       pieceMovedAudio.play()
     }
 
+    setLastMove({ from: oldCell, to: newCell })
+
     const nextTurn = turn === 'white' ? 'black' : 'white'
 
     setTable(tableCopy)
@@ -131,6 +133,8 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       } else {
         pieceMovedAudio.play()
       }
+
+      setLastMove({ from: getRandomPossibleMove.from, to: getRandomPossibleMove.to })
 
       const nextTurn = turn === 'white' ? 'black' : 'white'
 
@@ -209,13 +213,11 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
   }
 
   const evaluateBoard = (board) => {
-    let totalEvaluation = 0;
+    let totalEvaluation = 0
     board.flat().forEach((cell) => {
-
       if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
-
     })
-    return totalEvaluation;
+    return totalEvaluation
   };
 
 
@@ -241,6 +243,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
             turn={turn}
             gameStarted={gameStarted}
             setGameStarted={setGameStarted}
+            lastMove={lastMove}
           />
 
         })
