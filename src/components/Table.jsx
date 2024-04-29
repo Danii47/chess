@@ -92,9 +92,14 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
       const tableCopy = _.cloneDeep(table)
 
-      const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
-      console.log({ allPossibleMoves })
-      const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
+      console.time("mejorJugada")
+
+      // const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
+      // console.log({ allPossibleMoves })
+
+      const bestPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 4).movimientos //getBestPossibleMoves(allPossibleMoves)
+
+      console.timeEnd("mejorJugada")
 
       console.log({ bestPossibleMoves })
 
@@ -172,10 +177,15 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
   const getAllPossibleMoves = (table, color, isInCheck, depth) => {
 
-    if (depth === 0) return null
+    if (depth === 0) return {movimientos: null, puntosMaximos: 0}
 
     const allPosibleMoves = []
 
+    let puntosMaximos = null
+
+    let puntosMinimos = null
+
+    let filtroPuntosMinimos = null
 
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
@@ -188,24 +198,48 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
           changePiecesPosition(tableCopy, cell, cellToMove)
 
+          let puntos =  evaluateBoard(table)
+
+          if (puntosMaximos != null && puntos <= puntosMaximos) {
+            console.log("descarta")
+            continue;
+          }
+
           if ((isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false)) || (!isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false))) continue
-          allPosibleMoves.push({
+          
+          let posiblesMovs = getAllPossibleMoves(tableCopy, color === 'black' ? 'white' : 'black', false, depth - 1)
+          let nextMoves = posiblesMovs.movimientos
+          let maxPointsDeeper = posiblesMovs.puntosMaximos
+          let minPointsDeeper = posiblesMovs.puntosMinimos
+          
+          if (filtroPuntosMinimos != null && minPointsDeeper != null && minPointsDeeper < filtroPuntosMinimos)  { continue; }
+
+          filtroPuntosMinimos = minPointsDeeper
+
+          puntosMaximos = (puntosMaximos == null || puntos > puntosMaximos) ? puntos : puntosMaximos
+
+          const newPosibleMove = {
             from: cell,
             to: cellToMove,
-            points: evaluateBoard(table),
+            points: puntos,
             table: tableCopy,
-            nextMoves: getAllPossibleMoves(
-              tableCopy,
-              color === 'black' ? 'white' : 'black',
-              false,
-              depth - 1
-            ),
-          })
+            nextMoves,
+          }
 
+          if (maxPointsDeeper) {
+            newPosibleMove.maxPointsDeeper = maxPointsDeeper
+            puntosMinimos = (puntosMinimos == null || puntosMaximos < puntosMinimos) ? puntosMaximos : puntosMinimos
+          }
+
+          if (minPointsDeeper) {
+            newPosibleMove.minPointsDeeper = minPointsDeeper
+          }
+          
+          allPosibleMoves.push(newPosibleMove)
         }
       }
     })
-    return allPosibleMoves
+    return {movimientos: allPosibleMoves, puntosMaximos, puntosMinimos}
   }
 
   const evaluateBoard = (board) => {
