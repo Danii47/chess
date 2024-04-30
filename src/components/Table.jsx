@@ -93,12 +93,32 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     setTimeout(() => {
 
       const tableCopy = _.cloneDeep(table)
+      let t0 = performance.now()
 
+      const test = minimaxWithAlphaBetaPruning(tableCopy, 3, -Infinity, Infinity, true, 'black', isInCheck)
+      let t1 = performance.now()
+      
+      console.log('Execution time of minimaxWithAlphaBetaPruning: ' + (t1 - t0) + 'ms')
+
+      console.log(test)
+
+      t0 = performance.now()
       const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
-      console.log({ allPossibleMoves })
+      t1 = performance.now()
+
+      console.log('Execution time of allPossibleMoves: ' + (t1 - t0) + 'ms')
+      console.log(allPossibleMoves)
+
+
+      t0 = performance.now()
+
       const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
 
-      console.log({ bestPossibleMoves })
+      t1 = performance.now()
+
+      console.log('Execution time of getBestPossibleMoves: ' + (t1 - t0) + 'ms')
+      console.log(bestPossibleMoves)
+
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
 
@@ -149,7 +169,45 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     // eslint-disable-next-line
   }, [turn, IAOpponent])
 
-
+  function minimaxWithAlphaBetaPruning(table, depth, alpha, beta, maximizingPlayer, color, isInCheck) {
+    if (depth === 0) {
+      return { score: evaluateBoard(table), move: null };
+    }
+  
+    if (maximizingPlayer) {
+      let maxEval = -Infinity;
+      let bestMove = null;
+      const allPossibleMoves = getAllPossibleMoves(table, color, isInCheck, depth);
+      for (const move of allPossibleMoves) {
+        const result = minimaxWithAlphaBetaPruning(move.table, depth - 1, alpha, beta, false, color === 'black' ? 'white' : 'black', false);
+        if (result.score > maxEval) {
+          maxEval = result.score;
+          bestMove = move;
+        }
+        alpha = Math.max(alpha, result.score);
+        if (beta <= alpha) {
+          break;
+        }
+      }
+      return { score: maxEval, move: bestMove };
+    } else {
+      let minEval = Infinity;
+      let bestMove = null;
+      const allPossibleMoves = getAllPossibleMoves(table, color, isInCheck, depth);
+      for (const move of allPossibleMoves) {
+        const result = minimaxWithAlphaBetaPruning(move.table, depth - 1, alpha, beta, true, color === 'black' ? 'white' : 'black', false);
+        if (result.score < minEval) {
+          minEval = result.score;
+          bestMove = move;
+        }
+        beta = Math.min(beta, result.score);
+        if (beta <= alpha) {
+          break;
+        }
+      }
+      return { score: minEval, move: bestMove };
+    }
+  }
 
   const getBestPossibleMoves = (allPossibleMoves) => {
 
@@ -192,7 +250,6 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
           changePiecesPosition(tableCopy, cell, cellToMove)
 
-          if ((isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false)) || (!isInCheck && comprobateCheck(tableCopy, color === 'black' ? 'white' : 'black', false))) continue
           allPosibleMoves.push({
             from: cell,
             to: cellToMove,

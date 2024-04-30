@@ -24,7 +24,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
 
     const possibleMoves = cellSelected.piece.getPossibleMoves(table, cellSelected, turn, isInCheck)
 
-    return possibleMoves.some((cellToMove) => cellToMove.id === cell.id) && !cell.piece
+    return possibleMoves.some((cellToMove) => cellToMove.id === cell.id)
   }
 
   return (
@@ -39,7 +39,7 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
       }
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''} ${lastMove?.from.id === cell.id || lastMove?.to.id === cell.id ? 'lastMove' : ''}`}
+        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''} ${lastMove?.from.id === cell.id || lastMove?.to.id === cell.id ? 'lastMove' : ''}`}
         onClick={(evt) => handleMovePiece(evt)}
       >
         {
