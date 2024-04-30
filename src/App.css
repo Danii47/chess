@@ -70,7 +70,6 @@
 
 .chessCell.eatable {
   border: 3px solid rgba(84, 53, 3, 0.5);
-
 }
 
 .chessCell.lastMove::after {
