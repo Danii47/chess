@@ -37,6 +37,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false)
   const [IAOpponent, setIAOpponent] = useState(false)
   const [lastMove, setLastMove] = useState(null)
+  const [crowningPiece, setCrowningPiece] = useState(false)
 
 
   return (
@@ -67,6 +68,8 @@ function App() {
         IAOpponent={IAOpponent}
         lastMove={lastMove}
         setLastMove={setLastMove}
+        crowningPiece={crowningPiece}
+        setCrowningPiece={setCrowningPiece}
       />
 
       <Timer

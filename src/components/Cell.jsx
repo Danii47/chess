@@ -1,7 +1,7 @@
 import preventDefaultEvent from '../utils/preventDefaultEvent'
 import Piece from './Piece'
 
-export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, gameStarted, setGameStarted, lastMove }) {
+export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, setIsInCheck, gameStarted, setGameStarted, lastMove, crowningPiece, setCrowningPiece }) {
 
   const dragStartHandler = (evt, cell) => {
     if (cell.piece.color !== turn) return
@@ -53,6 +53,10 @@ export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner,
             gameStarted={gameStarted}
             setGameStarted={setGameStarted}
             winner={winner}
+            crowningPiece={crowningPiece}
+            setCrowningPiece={setCrowningPiece}
+            table={table}
+            setIsInCheck={setIsInCheck}
           />
         }
       </div>

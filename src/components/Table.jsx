@@ -14,8 +14,9 @@ import getRandomValue from '../utils/getRandomValue'
 import changePiecesPosition from '../utils/changePiecesPosition'
 import { saveGameToStorage } from '../utils/storage'
 import setBoardFunctions from '../utils/setBoardFunctions'
+import { PIECES } from '../constants/pieces'
 
-export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove}) {
+export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove, crowningPiece, setCrowningPiece }) {
 
   const [cellSelected, setCellSelected] = useState(null)
 
@@ -57,19 +58,20 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     setIsInCheck(check)
 
-    if (comprobateCheckMate(tableCopy, turn)) {
+    
+    if (check && comprobateCheckMate(tableCopy, turn)) {
       setWinner(turn)
       checkMateAudio.play()
-
-
+      
+      
       confetti({
         particleCount: 200,
         spread: 130,
         origin: { y: .6 }
       })
-
-
-
+      
+      
+      
     } else if (newCellPiece) {
       captureAudio.play()
     } else if (check) {
@@ -77,15 +79,25 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     } else {
       pieceMovedAudio.play()
     }
-
+    
+    
     setLastMove({ from: oldCell, to: newCell })
-
+    
+    
     const nextTurn = turn === 'white' ? 'black' : 'white'
-
+    
     setTable(tableCopy)
+
+    
     setTurn(nextTurn)
 
     saveGameToStorage(tableCopy, nextTurn)
+
+    if (newCell.piece.type === PIECES.PAWN && (newCell.y === 0 || newCell.y === 7)) {
+      setCrowningPiece(newCell.id)
+      setGameStarted(false)
+      return
+    }
   }
 
   useEffect(() => {
@@ -302,6 +314,9 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
             setGameStarted={setGameStarted}
             lastMove={lastMove}
             isInCheck={isInCheck}
+            setIsInCheck={setIsInCheck}
+            crowningPiece={crowningPiece}
+            setCrowningPiece={setCrowningPiece}
           />
 
         })
