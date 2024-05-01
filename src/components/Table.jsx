@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import Row from './Row'
 import Winner from './Winner'
 import confetti from 'canvas-confetti'
-import _ from 'lodash'
 
 import isValidMove from '../utils/isValidMove'
 import comprobateCheck from '../utils/comprobateCheck'
@@ -14,6 +13,7 @@ import checkSound from '../assets/sounds/check.mp3'
 import getRandomValue from '../utils/getRandomValue'
 import changePiecesPosition from '../utils/changePiecesPosition'
 import { saveGameToStorage } from '../utils/storage'
+import setBoardFunctions from '../utils/setBoardFunctions'
 
 export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove}) {
 
@@ -30,7 +30,9 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     if (!gameStarted) setGameStarted(true)
 
     const oldCell = oldCellData || JSON.parse(evt.dataTransfer.getData('cell'))
-    const tableCopy = _.cloneDeep(table)
+
+    const tableCopy = JSON.parse(JSON.stringify(table))
+    setBoardFunctions(tableCopy)
 
     const newCellId = evt.target.id || evt.target.parentElement.id
 
@@ -92,26 +94,21 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
     setTimeout(() => {
 
-      const tableCopy = _.cloneDeep(table)
 
+      const tableCopy = JSON.parse(JSON.stringify(table))
+      setBoardFunctions(tableCopy)
 
       let t0 = performance.now()
       const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
       let t1 = performance.now()
 
       console.log('Execution time of allPossibleMoves: ' + (t1 - t0) + 'ms')
-      console.log(allPossibleMoves)
-
 
       t0 = performance.now()
-
       const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
-
       t1 = performance.now()
 
       console.log('Execution time of getBestPossibleMoves: ' + (t1 - t0) + 'ms')
-      console.log(bestPossibleMoves)
-
 
       const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
 
@@ -156,7 +153,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
       saveGameToStorage(tableCopy, nextTurn)
 
-    }, 1000 * (Math.random() * 5));
+    }, 1000 * (Math.random() * 3));
 
 
     // eslint-disable-next-line
@@ -186,42 +183,91 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
 
 
 
+  // const getAllPossibleMoves = (table, color, isInCheck, depth) => {
+
+  //   if (depth === 0) return null
+
+  //   const allPosibleMoves = []
+
+
+  //   table.flat().forEach(cell => {
+  //     if (cell.piece && cell.piece.color === color) {
+  //       const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
+
+        
+
+  //       for (const cellToMove of possibleMoves) {
+
+  //         const tableCopy = JSON.parse(JSON.stringify(table))
+  //         setBoardFunctions(tableCopy)
+
+
+  //         changePiecesPosition(tableCopy, cell, cellToMove)
+
+  //         allPosibleMoves.push({
+  //           from: cell,
+  //           to: cellToMove,
+  //           points: depth === 1 ? evaluateBoard(table) : null,
+  //           table: tableCopy,
+  //           nextMoves: getAllPossibleMoves(
+  //             tableCopy,
+  //             color === 'black' ? 'white' : 'black',
+  //             false,
+  //             depth - 1
+  //           ),
+  //         })
+
+  //       }
+  //     }
+  //   })
+  //   return allPosibleMoves
+  // }
+
   const getAllPossibleMoves = (table, color, isInCheck, depth) => {
-
-    if (depth === 0) return null
-
-    const allPosibleMoves = []
-
-
+    if (depth === 0) return null;
+  
+    const allPossibleMoves = [];
+  
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
-        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
-
+        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck);
+  
         for (const cellToMove of possibleMoves) {
-
-          const tableCopy = _.cloneDeep(table)
-
-
-          changePiecesPosition(tableCopy, cell, cellToMove)
-
-          allPosibleMoves.push({
+          // Guarda la pieza que se va a mover y la pieza que se va a capturar (si existe)
+          const movingPiece = cell.piece;
+          const capturedPiece = cellToMove.piece;
+  
+          // Realiza el movimiento
+          cell.piece = null;
+          cellToMove.piece = movingPiece;
+  
+          // Genera los movimientos posibles después de este movimiento
+          const nextMoves = depth === 1 ? null : getAllPossibleMoves(
+            table,
+            color === 'black' ? 'white' : 'black',
+            false,
+            depth - 1
+          )
+  
+          // Guarda el movimiento
+          allPossibleMoves.push({
             from: cell,
             to: cellToMove,
-            points: evaluateBoard(table),
-            table: tableCopy,
-            nextMoves: getAllPossibleMoves(
-              tableCopy,
-              color === 'black' ? 'white' : 'black',
-              false,
-              depth - 1
-            ),
+            points: depth === 1 ? evaluateBoard(table) : null,
+            table: JSON.parse(JSON.stringify(table)), // Solo necesitamos una copia del tablero si vamos a guardar el movimiento
+            nextMoves,
           })
-
+  
+          // Deshace el movimiento
+          cell.piece = movingPiece;
+          cellToMove.piece = capturedPiece;
         }
       }
-    })
-    return allPosibleMoves
-  }
+    });
+  
+    return allPossibleMoves;
+  };
+
 
   const evaluateBoard = (board) => {
     let totalEvaluation = 0
@@ -229,7 +275,7 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
     })
     return totalEvaluation
-  };
+  }
 
 
   return (
