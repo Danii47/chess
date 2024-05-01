@@ -6,6 +6,7 @@ export const saveGameToStorage = (table, turn) => {
 export const resetGameStorage = () => {
   window.localStorage.removeItem('table')
   window.localStorage.removeItem('turn')
+  window.localStorage.removeItem('time')
 }
 
 export const updateTimeInStorage = (time) => {
