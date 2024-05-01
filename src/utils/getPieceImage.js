@@ -11,21 +11,22 @@ import Rook_W from '../assets/pieces/rook_w.svg'
 import Bishop_W from '../assets/pieces/bishop_w.svg'
 import Knight_W from '../assets/pieces/knight_w.svg'
 import Pawn_W from '../assets/pieces/pawn_w.svg'
+import { PIECES } from '../constants/pieces'
 
 export default function getPieceImage(piece) {
   switch (piece.type) {
-    case 'king':
-      return piece.color === "black" ? King_B : King_W
-    case 'queen':
-      return piece.color === "black" ? Queen_B : Queen_W
-    case 'pawn':
-      return piece.color === "black" ? Pawn_B : Pawn_W
-    case 'rook':
-      return piece.color === "black" ? Rook_B : Rook_W
-    case 'bishop':
-      return piece.color === "black" ? Bishop_B : Bishop_W
-    case 'knight':
-      return piece.color === "black" ? Knight_B : Knight_W
+    case PIECES.KING:
+      return piece.color === 'black' ? King_B : King_W
+    case PIECES.QUEEN:
+      return piece.color === 'black' ? Queen_B : Queen_W
+    case PIECES.PAWN:
+      return piece.color === 'black' ? Pawn_B : Pawn_W
+    case PIECES.ROOK:
+      return piece.color === 'black' ? Rook_B : Rook_W
+    case PIECES.BISHOP:
+      return piece.color === 'black' ? Bishop_B : Bishop_W
+    case PIECES.KNIGHT:
+      return piece.color === 'black' ? Knight_B : Knight_W
     default:
       return null
   }
