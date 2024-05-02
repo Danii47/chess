@@ -175,7 +175,6 @@ export const Table = memo(function Table({ table, setTable, turn, setTurn, winne
   const getBestPossibleMoves = (allPossibleMoves) => {
 
     // It could have been created with recursion but since I want to set the depth to 3, I leave it as follows
-
     allPossibleMoves.forEach((IAMovesDepth1) => {
 
       IAMovesDepth1.nextMoves.forEach((OpponentMovesDepth2) => {
@@ -230,10 +229,10 @@ export const Table = memo(function Table({ table, setTable, turn, setTurn, winne
           cellToMove.piece = capturedPiece
         }
       }
-    });
+    })
   
     return allPossibleMoves
-  };
+  }
 
 
   const evaluateBoard = (board) => {
