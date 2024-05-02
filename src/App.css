@@ -55,9 +55,6 @@
   border: 2px solid rgb(0 0 0 / .2);
 }
 
-.chessCell.eatable {
-  border: 3px solid rgba(84, 53, 3, 0.5);
-}
 
 .chessCell.lastMove::after {
   position:  absolute;
@@ -85,6 +82,11 @@
   background-color: rgb(0 0 0 / .20);
   border-radius: 50%;
 }
+
+.chessCell.eatable {
+  border: 3px solid rgba(84, 53, 3, 0.5);
+}
+
 
 .chessRow {
   display: flex;
@@ -124,7 +126,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: grab;
+  /* cursor: grab; */
   transition: background-color 0.3s ease-out;
 }
 
@@ -135,10 +137,6 @@
 
 .chessPiece.end {
   pointer-events: none;
-}
-
-.chessPiece.dragging {
-  cursor: grabbing;
 }
 
 .timer {

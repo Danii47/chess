@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 import Row from './Row'
 import Winner from './Winner'
 import confetti from 'canvas-confetti'
@@ -16,8 +16,8 @@ import { saveGameToStorage } from '../utils/storage'
 import setBoardFunctions from '../utils/setBoardFunctions'
 import { PIECES } from '../constants/pieces'
 
-export default function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove, crowningPiece, setCrowningPiece }) {
-
+export const Table = memo(function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove, crowningPiece, setCrowningPiece }) {
+  
   const [cellSelected, setCellSelected] = useState(null)
 
   const pieceMovedAudio = new Audio(pieceMovedSound)
@@ -193,67 +193,22 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
     return movesFiltered
   }
 
-
-
-  // const getAllPossibleMoves = (table, color, isInCheck, depth) => {
-
-  //   if (depth === 0) return null
-
-  //   const allPosibleMoves = []
-
-
-  //   table.flat().forEach(cell => {
-  //     if (cell.piece && cell.piece.color === color) {
-  //       const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
-
-        
-
-  //       for (const cellToMove of possibleMoves) {
-
-  //         const tableCopy = JSON.parse(JSON.stringify(table))
-  //         setBoardFunctions(tableCopy)
-
-
-  //         changePiecesPosition(tableCopy, cell, cellToMove)
-
-  //         allPosibleMoves.push({
-  //           from: cell,
-  //           to: cellToMove,
-  //           points: depth === 1 ? evaluateBoard(table) : null,
-  //           table: tableCopy,
-  //           nextMoves: getAllPossibleMoves(
-  //             tableCopy,
-  //             color === 'black' ? 'white' : 'black',
-  //             false,
-  //             depth - 1
-  //           ),
-  //         })
-
-  //       }
-  //     }
-  //   })
-  //   return allPosibleMoves
-  // }
-
   const getAllPossibleMoves = (table, color, isInCheck, depth) => {
-    if (depth === 0) return null;
+    if (depth === 0) return null
   
-    const allPossibleMoves = [];
+    const allPossibleMoves = []
   
     table.flat().forEach(cell => {
       if (cell.piece && cell.piece.color === color) {
-        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck);
+        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
   
         for (const cellToMove of possibleMoves) {
-          // Guarda la pieza que se va a mover y la pieza que se va a capturar (si existe)
-          const movingPiece = cell.piece;
-          const capturedPiece = cellToMove.piece;
+          const movingPiece = cell.piece
+          const capturedPiece = cellToMove.piece
   
-          // Realiza el movimiento
-          cell.piece = null;
-          cellToMove.piece = movingPiece;
+          cell.piece = null
+          cellToMove.piece = movingPiece
   
-          // Genera los movimientos posibles después de este movimiento
           const nextMoves = depth === 1 ? null : getAllPossibleMoves(
             table,
             color === 'black' ? 'white' : 'black',
@@ -266,18 +221,18 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
             from: cell,
             to: cellToMove,
             points: depth === 1 ? evaluateBoard(table) : null,
-            table: JSON.parse(JSON.stringify(table)), // Solo necesitamos una copia del tablero si vamos a guardar el movimiento
-            nextMoves,
+            table: JSON.parse(JSON.stringify(table)),
+            nextMoves
           })
   
           // Deshace el movimiento
-          cell.piece = movingPiece;
-          cellToMove.piece = capturedPiece;
+          cell.piece = movingPiece
+          cellToMove.piece = capturedPiece
         }
       }
     });
   
-    return allPossibleMoves;
+    return allPossibleMoves
   };
 
 
@@ -323,4 +278,4 @@ export default function Table({ table, setTable, turn, setTurn, winner, setWinne
       }
     </div>
   )
-}
+})

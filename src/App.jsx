@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import Table from './components/Table'
+import {Table} from './components/Table'
 import startTable from './utils/startTable'
 import Timer from './components/Timer'
 import RestartGame from './components/RestartGame'
@@ -8,6 +8,7 @@ import RestartGame from './components/RestartGame'
 import './App.css'
 import setBoardFunctions from './utils/setBoardFunctions'
 import createTimeObject from './utils/createTimeObject'
+import { COLORS } from './constants/pieces'
 
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
   })
 
   const [turn, setTurn] = useState(() => {
-    return window.localStorage.getItem('turn') ?? 'white'
+    return window.localStorage.getItem('turn') ?? COLORS.WHITE
   })
 
   const [isInCheck, setIsInCheck] = useState(false)
@@ -37,7 +38,6 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false)
   const [IAOpponent, setIAOpponent] = useState(false)
   const [lastMove, setLastMove] = useState(null)
-  const [crowningPiece, setCrowningPiece] = useState(false)
 
 
   return (
@@ -68,8 +68,6 @@ function App() {
         IAOpponent={IAOpponent}
         lastMove={lastMove}
         setLastMove={setLastMove}
-        crowningPiece={crowningPiece}
-        setCrowningPiece={setCrowningPiece}
       />
 
       <Timer
