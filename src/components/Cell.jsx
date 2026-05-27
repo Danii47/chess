@@ -1,65 +1,79 @@
+import { memo } from 'react'
 import preventDefaultEvent from '../utils/preventDefaultEvent'
 import Piece from './Piece'
 
-export default function Cell({ rowIndex, cell, cellIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, setIsInCheck, gameStarted, setGameStarted, lastMove, crowningPiece, setCrowningPiece }) {
-
-  const dragStartHandler = (evt, cell) => {
-    if (cell.piece.color !== turn) return
-
-    if (!gameStarted) setGameStarted(true)
-
+const Cell = memo(function Cell({
+  cell, rowIndex, cellIndex,
+  isSelected, isValidMoveTarget, isLastMove,
+  turn, winner, gameStarted, crowningPiece,
+  onDragStart, onDrop, onCellClick, onCrownPiece
+}) {
+  const dragStartHandler = (evt) => {
     evt.dataTransfer.setData('cell', JSON.stringify(cell))
-    setCellSelected(cell)
+    onDragStart(cell)
   }
 
-
-  const handleMovePiece = (evt) => {
-    if (!cellSelected) return
-
-    onDropHandler(evt, cellSelected)
-  }
-
-  const isValidPossibleMove = (cell) => {
-    if (!cellSelected) return false
-
-    const possibleMoves = cellSelected.piece.getPossibleMoves(table, cellSelected, turn, isInCheck)
-
-    return possibleMoves.some((cellToMove) => cellToMove.id === cell.id)
-  }
+  const cellClass = [
+    'chessCell',
+    cell.cellColor,
+    isSelected        ? 'selected'    : '',
+    isValidMoveTarget && !cell.piece  ? 'isValidMove' : '',
+    isValidMoveTarget &&  cell.piece  ? 'eatable'     : '',
+    isLastMove        ? 'lastMove'    : ''
+  ].filter(Boolean).join(' ')
 
   return (
-    <div onDragOver={preventDefaultEvent} onDrop={(evt) => onDropHandler(evt)}>
-      {
-        (cellIndex === 0) &&
-        <div className='chessRowLabel'>{8 - rowIndex}</div>
-      }
-      {
-        (rowIndex === 7) &&
-        <div style={{ right: `${cellIndex * 100}px` }} className='chessColLabel'>{String.fromCharCode('A'.charCodeAt(0) + (7 - cellIndex))}</div>
-      }
+    <div onDragOver={preventDefaultEvent} onDrop={onDrop}>
       <div
         id={8 * rowIndex + cellIndex}
-        className={`chessCell ${cell.cellColor} ${isValidPossibleMove(cell) && !cell.piece ? 'isValidMove' : ''} ${isValidPossibleMove(cell) && cell.piece ? 'eatable' : ''} ${cell.id === cellSelected?.id ? 'selected' : ''} ${lastMove?.from.id === cell.id || lastMove?.to.id === cell.id ? 'lastMove' : ''}`}
-        onClick={(evt) => handleMovePiece(evt)}
+        className={cellClass}
+        onClick={() => onCellClick(cell)}
       >
-        {
-          cell.piece && <Piece
+        {/* Rank label on leftmost column, file label on bottom row */}
+        {cellIndex === 0 && (
+          <span className="cellLabel rankLabel">{8 - rowIndex}</span>
+        )}
+        {rowIndex === 7 && (
+          <span className="cellLabel fileLabel">
+            {String.fromCharCode('a'.charCodeAt(0) + cellIndex)}
+          </span>
+        )}
+
+        {cell.piece && (
+          <Piece
             piece={cell.piece}
             cell={cell}
             dragStartHandler={dragStartHandler}
-            cellSelected={cellSelected}
-            setCellSelected={setCellSelected}
             turn={turn}
-            gameStarted={gameStarted}
-            setGameStarted={setGameStarted}
             winner={winner}
             crowningPiece={crowningPiece}
-            setCrowningPiece={setCrowningPiece}
-            table={table}
-            setIsInCheck={setIsInCheck}
+            onCellClick={onCellClick}
+            onCrownPiece={onCrownPiece}
           />
-        }
+        )}
       </div>
     </div>
   )
-}
+}, (prev, next) => {
+  const prevPiece = prev.cell.piece
+  const nextPiece = next.cell.piece
+  const pieceSame =
+    (prevPiece === null) === (nextPiece === null) &&
+    prevPiece?.type    === nextPiece?.type        &&
+    prevPiece?.color   === nextPiece?.color       &&
+    prevPiece?.hasMoved === nextPiece?.hasMoved   &&
+    prevPiece?.check   === nextPiece?.check
+
+  return (
+    pieceSame &&
+    prev.isSelected        === next.isSelected        &&
+    prev.isValidMoveTarget === next.isValidMoveTarget &&
+    prev.isLastMove        === next.isLastMove        &&
+    prev.turn              === next.turn              &&
+    prev.winner            === next.winner            &&
+    prev.crowningPiece     === next.crowningPiece     &&
+    prev.gameStarted       === next.gameStarted
+  )
+})
+
+export default Cell

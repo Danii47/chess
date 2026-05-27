@@ -1,31 +1,35 @@
+import { memo } from 'react'
 import Cell from './Cell'
 
-export default function Row({ row, rowIndex, onDropHandler, winner, table, cellSelected, setCellSelected, turn, isInCheck, setIsInCheck, gameStarted, setGameStarted, lastMove, crowningPiece, setCrowningPiece }) {
+const Row = memo(function Row({
+  row, rowIndex,
+  selectedCellId, validMoveIds, lastMoveFromId, lastMoveToId,
+  turn, winner, gameStarted, crowningPiece,
+  onDragStart, onDrop, onCellClick, onCrownPiece
+}) {
   return (
     <div className='chessRow'>
-      {
-        row.map((cell, cellIndex) => {
-          return <Cell 
-              key={8 * rowIndex + cellIndex}
-              rowIndex={rowIndex}
-              cell={cell}
-              cellIndex={cellIndex}
-              onDropHandler={onDropHandler}
-              winner={winner}
-              table={table}
-              cellSelected={cellSelected}
-              setCellSelected={setCellSelected}
-              turn={turn}
-              gameStarted={gameStarted}
-              setGameStarted={setGameStarted}
-              lastMove={lastMove}
-              isInCheck={isInCheck}
-              setIsInCheck={setIsInCheck}
-              crowningPiece={crowningPiece}
-              setCrowningPiece={setCrowningPiece}
-            />
-        })
-      }
+      {row.map((cell, cellIndex) => (
+        <Cell
+          key={8 * rowIndex + cellIndex}
+          cell={cell}
+          rowIndex={rowIndex}
+          cellIndex={cellIndex}
+          isSelected={cell.id === selectedCellId}
+          isValidMoveTarget={validMoveIds.has(cell.id)}
+          isLastMove={cell.id === lastMoveFromId || cell.id === lastMoveToId}
+          turn={turn}
+          winner={winner}
+          gameStarted={gameStarted}
+          crowningPiece={crowningPiece}
+          onDragStart={onDragStart}
+          onDrop={onDrop}
+          onCellClick={onCellClick}
+          onCrownPiece={onCrownPiece}
+        />
+      ))}
     </div>
   )
-}
+})
+
+export default Row

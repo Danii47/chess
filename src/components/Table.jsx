@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from 'react'
+import { useEffect, useState, useCallback, useRef, memo } from 'react'
 import Row from './Row'
 import Winner from './Winner'
 import confetti from 'canvas-confetti'
@@ -15,266 +15,280 @@ import changePiecesPosition from '../utils/changePiecesPosition'
 import { saveGameToStorage } from '../utils/storage'
 import setBoardFunctions from '../utils/setBoardFunctions'
 import { PIECES } from '../constants/pieces'
+import { GAME_ACTIONS } from '../reducers/gameReducer'
+import getPossibleMoves from '../utils/getPossibleMoves'
 
-export const Table = memo(function Table({ table, setTable, turn, setTurn, winner, setWinner, isInCheck, setIsInCheck, gameStarted, setGameStarted, IAOpponent, lastMove, setLastMove, crowningPiece, setCrowningPiece }) {
-  
-  const [cellSelected, setCellSelected] = useState(null)
+const pieceMovedAudio = new Audio(pieceMovedSound)
+const checkMateAudio  = new Audio(checkMateSound)
+const captureAudio    = new Audio(captureSound)
+const checkAudio      = new Audio(checkSound)
 
-  const pieceMovedAudio = new Audio(pieceMovedSound)
-  const checkMateAudio = new Audio(checkMateSound)
-  const captureAudio = new Audio(captureSound)
-  const checkAudio = new Audio(checkSound)
+// ─── Board serialisation for the Web Worker ───────────────────────────────────
+const PIECE_CODE = { pawn: 1, knight: 2, bishop: 3, rook: 4, queen: 5, king: 6 }
 
-  const onDropHandler = (evt, oldCellData = undefined) => {
-    if (!oldCellData && !evt.dataTransfer.getData('cell')) return
+function serializeForWorker(table) {
+  const board    = new Int8Array(64)
+  const hasMoved = new Uint8Array(64)
+  table.flat().forEach(cell => {
+    if (!cell.piece) return
+    const code = PIECE_CODE[cell.piece.type]
+    board[cell.id]    = cell.piece.color === 'white' ? code : -code
+    hasMoved[cell.id] = cell.piece.hasMoved ? 1 : 0
+  })
+  return { board, hasMoved }
+}
 
-    if (!gameStarted) setGameStarted(true)
+// ─── Component ────────────────────────────────────────────────────────────────
 
-    const oldCell = oldCellData || JSON.parse(evt.dataTransfer.getData('cell'))
+export const Table = memo(function Table({ gameState, dispatch, IAOpponent }) {
+  const { table, turn, isInCheck, winner, gameStarted, lastMove, crowningPiece } = gameState
 
-    const tableCopy = JSON.parse(JSON.stringify(table))
-    setBoardFunctions(tableCopy)
+  const [uiState, setUiState] = useState({
+    selectedCell: null,
+    validMoveIds: new Set(),
+    isAIThinking: false
+  })
 
-    const newCellId = evt.target.id || evt.target.parentElement.id
+  const gameStateRef   = useRef(gameState)
+  const uiStateRef     = useRef(uiState)
+  const IAOpponentRef  = useRef(IAOpponent)
+  const workerRef      = useRef(null)
 
-    const newCell = tableCopy.flat().find((cell) => {
-      return cell.id == newCellId
-    })
+  gameStateRef.current  = gameState
+  uiStateRef.current    = uiState
+  IAOpponentRef.current = IAOpponent
 
+  // ─── Core move execution (shared: human and AI) ─────────────────────────
 
-    if (!isValidMove(tableCopy, oldCell, newCell, turn, isInCheck)) return
+  const executeMove = useCallback((tableCopy, fromCell, toCell) => {
+    const { turn } = gameStateRef.current
+    const nextTurn   = turn === 'white' ? 'black' : 'white'
 
+    // Capture before mutation — changePiecesPosition nulls fromCell.piece
+    const capturedPiece = toCell.piece
+      ? { type: toCell.piece.type, color: toCell.piece.color }
+      : null
+    const movedPiece  = { type: fromCell.piece.type, color: fromCell.piece.color }
+    const fromCoord   = { x: fromCell.x, y: fromCell.y }
+    const toCoord     = { x: toCell.x,   y: toCell.y   }
 
-    setCellSelected(null)
+    changePiecesPosition(tableCopy, fromCell, toCell)
 
-    const newCellPiece = Boolean(newCell.piece)
-
-    changePiecesPosition(tableCopy, oldCell, newCell)
-
-
-    if ((isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)) || (!isInCheck && comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true))) return
+    // Abort if moving player left their own king in check
+    if (comprobateCheck(tableCopy, nextTurn, false)) return
 
     const check = comprobateCheck(tableCopy, turn, true)
 
-    setIsInCheck(check)
-
-    
     if (check && comprobateCheckMate(tableCopy, turn)) {
-      setWinner(turn)
       checkMateAudio.play()
-      
-      
-      confetti({
-        particleCount: 200,
-        spread: 130,
-        origin: { y: .6 }
+      confetti({ particleCount: 200, spread: 130, origin: { y: .6 } })
+      dispatch({
+        type: GAME_ACTIONS.MOVE_PIECE,
+        table: tableCopy, nextTurn, isInCheck: check,
+        winner: turn, lastMove: { from: fromCell, to: toCell }, crowningPiece: null,
+        capturedPiece, movedPiece, fromCoord, toCoord
       })
-      
-      
-      
-    } else if (newCellPiece) {
-      captureAudio.play()
-    } else if (check) {
-      checkAudio.play()
-    } else {
-      pieceMovedAudio.play()
-    }
-    
-    
-    setLastMove({ from: oldCell, to: newCell })
-    
-    
-    const nextTurn = turn === 'white' ? 'black' : 'white'
-    
-    setTable(tableCopy)
-
-    
-    setTurn(nextTurn)
-
-    saveGameToStorage(tableCopy, nextTurn)
-
-    if (newCell.piece.type === PIECES.PAWN && (newCell.y === 0 || newCell.y === 7)) {
-      setCrowningPiece(newCell.id)
-      setGameStarted(false)
+      saveGameToStorage(tableCopy, nextTurn)
       return
     }
-  }
+
+    if (capturedPiece) captureAudio.play()
+    else if (check)    checkAudio.play()
+    else               pieceMovedAudio.play()
+
+    const isPawnPromotion = toCell.piece?.type === PIECES.PAWN
+      && (toCell.y === 0 || toCell.y === 7)
+
+    dispatch({
+      type: GAME_ACTIONS.MOVE_PIECE,
+      table: tableCopy, nextTurn, isInCheck: check,
+      winner: null, lastMove: { from: fromCell, to: toCell },
+      crowningPiece: isPawnPromotion ? toCell.id : null,
+      capturedPiece, movedPiece, fromCoord, toCoord
+    })
+    saveGameToStorage(tableCopy, nextTurn)
+  }, [dispatch])
+
+  // ─── Web Worker lifecycle ───────────────────────────────────────────────
 
   useEffect(() => {
+    workerRef.current = new Worker(
+      new URL('../workers/chessEngine.worker.js', import.meta.url)
+    )
 
-    if (turn === 'white' || winner || !IAOpponent) return
+    workerRef.current.onmessage = (e) => {
+      const aiMove = e.data    // { from, to } | null
+      setUiState(prev => ({ ...prev, isAIThinking: false }))
 
-    setTimeout(() => {
+      if (!aiMove) return      // stalemate / no moves
 
+      const { table, turn, winner, crowningPiece } = gameStateRef.current
+      // Guard against stale responses (game reset, IA toggled off, etc.)
+      if (winner || crowningPiece || turn === 'white' || !IAOpponentRef.current) return
 
       const tableCopy = JSON.parse(JSON.stringify(table))
       setBoardFunctions(tableCopy)
 
-      let t0 = performance.now()
-      const allPossibleMoves = getAllPossibleMoves(tableCopy, 'black', isInCheck, 3)
-      let t1 = performance.now()
+      const fromCell = tableCopy.flat().find(c => c.id === aiMove.from)
+      const toCell   = tableCopy.flat().find(c => c.id === aiMove.to)
+      if (!fromCell || !toCell) return
 
-      console.log('Execution time of allPossibleMoves: ' + (t1 - t0) + 'ms')
-
-      t0 = performance.now()
-      const bestPossibleMoves = getBestPossibleMoves(allPossibleMoves)
-      t1 = performance.now()
-
-      console.log('Execution time of getBestPossibleMoves: ' + (t1 - t0) + 'ms')
-
-      const getRandomPossibleMove = getRandomValue(bestPossibleMoves)
-
-      const newCellPiece = Boolean(getRandomPossibleMove.to.piece)
-
-      changePiecesPosition(tableCopy, getRandomPossibleMove.from, getRandomPossibleMove.to)
-
-      comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)
-
-      const check = comprobateCheck(tableCopy, turn, true)
-
-
-      setIsInCheck(check)
-
-      if (comprobateCheckMate(tableCopy, turn)) {
-        setWinner(turn)
-        checkMateAudio.play()
-
-
-        confetti({
-          particleCount: 200,
-          spread: 130,
-          origin: { y: .6 }
-        })
-
-
-
-      } else if (newCellPiece) {
-        captureAudio.play()
-      } else if (check) {
-        checkAudio.play()
-      } else {
-        pieceMovedAudio.play()
-      }
-
-      setLastMove({ from: getRandomPossibleMove.from, to: getRandomPossibleMove.to })
-
-      const nextTurn = turn === 'white' ? 'black' : 'white'
-
-      setTable(tableCopy)
-      setTurn(nextTurn)
-
-      saveGameToStorage(tableCopy, nextTurn)
-
-    }, 1000 * (Math.random() * 3));
-
-
-    // eslint-disable-next-line
-  }, [turn, IAOpponent])
-
-
-  const getBestPossibleMoves = (allPossibleMoves) => {
-
-    // It could have been created with recursion but since I want to set the depth to 3, I leave it as follows
-    allPossibleMoves.forEach((IAMovesDepth1) => {
-
-      IAMovesDepth1.nextMoves.forEach((OpponentMovesDepth2) => {
-
-        const depth3MaxValue = Math.max(...OpponentMovesDepth2.nextMoves.map(IAMovesDepth3 => IAMovesDepth3.points))
-        OpponentMovesDepth2.maxPointsDeeper = depth3MaxValue
-      })
-
-      const depth2MinValue = Math.min(...IAMovesDepth1.nextMoves.map(OpponentMovesDepth2 => OpponentMovesDepth2.maxPointsDeeper))
-      IAMovesDepth1.minPointsDeeper = depth2MinValue
-    })
-
-    const movesFiltered = allPossibleMoves.filter(IAMovesDepth1 => IAMovesDepth1.minPointsDeeper === Math.max(...allPossibleMoves.map((IADepth1 => IADepth1.minPointsDeeper))))
-
-    return movesFiltered
-  }
-
-  const getAllPossibleMoves = (table, color, isInCheck, depth) => {
-    if (depth === 0) return null
-  
-    const allPossibleMoves = []
-  
-    table.flat().forEach(cell => {
-      if (cell.piece && cell.piece.color === color) {
-        const possibleMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
-  
-        for (const cellToMove of possibleMoves) {
-          const movingPiece = cell.piece
-          const capturedPiece = cellToMove.piece
-  
-          cell.piece = null
-          cellToMove.piece = movingPiece
-  
-          const nextMoves = depth === 1 ? null : getAllPossibleMoves(
-            table,
-            color === 'black' ? 'white' : 'black',
-            false,
-            depth - 1
-          )
-  
-          // Guarda el movimiento
-          allPossibleMoves.push({
-            from: cell,
-            to: cellToMove,
-            points: depth === 1 ? evaluateBoard(table) : null,
-            table: JSON.parse(JSON.stringify(table)),
-            nextMoves
-          })
-  
-          // Deshace el movimiento
-          cell.piece = movingPiece
-          cellToMove.piece = capturedPiece
+      // AI pawns auto-promote to queen (promotes piece type before executeMove
+      // sees it, so isPawnPromotion check evaluates to false — no UI shown)
+      if (fromCell.piece?.type === PIECES.PAWN) {
+        const isPromotion = (fromCell.piece.color === 'black' && toCell.y === 7)
+                         || (fromCell.piece.color === 'white' && toCell.y === 0)
+        if (isPromotion) {
+          fromCell.piece.type = PIECES.QUEEN
+          fromCell.piece.getPossibleMoves = getPossibleMoves
         }
       }
-    })
-  
-    return allPossibleMoves
-  }
 
+      executeMove(tableCopy, fromCell, toCell)
+    }
 
-  const evaluateBoard = (board) => {
-    let totalEvaluation = 0
-    board.flat().forEach((cell) => {
-      if (cell.piece) totalEvaluation += (cell.piece.points() + cell.extraPositionPoints())
-    })
-    return totalEvaluation
-  }
+    workerRef.current.onerror = (err) => {
+      console.error('Chess engine worker error:', err)
+      setUiState(prev => ({ ...prev, isAIThinking: false }))
+    }
 
+    return () => { workerRef.current?.terminate(); workerRef.current = null }
+  }, [executeMove])
+
+  // ─── AI trigger ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (turn === 'white' || winner || !IAOpponent || crowningPiece) return
+    if (!workerRef.current) return
+
+    const { board, hasMoved } = serializeForWorker(table)
+
+    setUiState(prev => ({ ...prev, isAIThinking: true }))
+
+    // Transfer the typed array buffers so the worker gets zero-copy ownership
+    workerRef.current.postMessage(
+      { board, hasMoved, depth: 4 },
+      [board.buffer, hasMoved.buffer]
+    )
+  }, [turn, IAOpponent, crowningPiece, winner])
+
+  // ─── Human interaction handlers ─────────────────────────────────────────
+
+  const handleDragStart = useCallback((cell) => {
+    const { table, turn, isInCheck } = gameStateRef.current
+    if (cell.piece?.color !== turn) return
+    const validMoves = cell.piece.getPossibleMoves(table, cell, turn, isInCheck)
+    setUiState(prev => ({
+      ...prev,
+      selectedCell: cell,
+      validMoveIds: new Set(validMoves.map(c => c.id))
+    }))
+  }, [])
+
+  const handleDrop = useCallback((evt) => {
+    const { table, turn, isInCheck } = gameStateRef.current
+    const cellDataStr = evt.dataTransfer?.getData?.('cell')
+    if (!cellDataStr) return
+    const fromData = JSON.parse(cellDataStr)
+
+    const rawId = evt.target?.id || evt.target?.parentElement?.id
+    if (!rawId) return
+    const newCellId = Number(rawId)
+    if (isNaN(newCellId)) return
+
+    const tableCopy = JSON.parse(JSON.stringify(table))
+    setBoardFunctions(tableCopy)
+    const fromCell = tableCopy.flat().find(c => c.id === fromData.id)
+    const toCell   = tableCopy.flat().find(c => c.id === newCellId)
+    if (!fromCell || !toCell) return
+    if (!isValidMove(tableCopy, fromCell, toCell, turn, isInCheck)) return
+
+    setUiState(prev => ({ ...prev, selectedCell: null, validMoveIds: new Set() }))
+    executeMove(tableCopy, fromCell, toCell)
+  }, [executeMove])
+
+  const handleCellClick = useCallback((clickedCell) => {
+    const { table, turn, isInCheck } = gameStateRef.current
+    const { selectedCell, validMoveIds } = uiStateRef.current
+
+    if (selectedCell?.id === clickedCell.id) {
+      setUiState(prev => ({ ...prev, selectedCell: null, validMoveIds: new Set() }))
+      return
+    }
+
+    if (selectedCell && validMoveIds.has(clickedCell.id)) {
+      const tableCopy = JSON.parse(JSON.stringify(table))
+      setBoardFunctions(tableCopy)
+      const fromCell = tableCopy.flat().find(c => c.id === selectedCell.id)
+      const toCell   = tableCopy.flat().find(c => c.id === clickedCell.id)
+      if (!fromCell || !toCell) return
+      if (!isValidMove(tableCopy, fromCell, toCell, turn, isInCheck)) return
+      setUiState(prev => ({ ...prev, selectedCell: null, validMoveIds: new Set() }))
+      executeMove(tableCopy, fromCell, toCell)
+      return
+    }
+
+    if (clickedCell.piece?.color === turn) {
+      const validMoves = clickedCell.piece.getPossibleMoves(table, clickedCell, turn, isInCheck)
+      setUiState(prev => ({
+        ...prev,
+        selectedCell: clickedCell,
+        validMoveIds: new Set(validMoves.map(c => c.id))
+      }))
+      return
+    }
+
+    setUiState(prev => ({ ...prev, selectedCell: null, validMoveIds: new Set() }))
+  }, [executeMove])
+
+  const handleCrownPiece = useCallback((cell, pieceType) => {
+    const { table, turn } = gameStateRef.current
+    const tableCopy = JSON.parse(JSON.stringify(table))
+    setBoardFunctions(tableCopy)
+    const targetCell = tableCopy.flat().find(c => c.id === cell.id)
+    targetCell.piece.type = pieceType
+    targetCell.piece.getPossibleMoves = getPossibleMoves
+
+    const check = comprobateCheck(tableCopy, turn === 'white' ? 'black' : 'white', true)
+    if (check) checkAudio.play()
+
+    dispatch({ type: GAME_ACTIONS.FINISH_CROWNING, table: tableCopy, isInCheck: check })
+    saveGameToStorage(tableCopy, turn)
+  }, [dispatch])
+
+  // ─── Render ──────────────────────────────────────────────────────────────
+
+  const lastMoveFromId = lastMove?.from.id ?? -1
+  const lastMoveToId   = lastMove?.to.id   ?? -1
+  const { selectedCell, validMoveIds, isAIThinking } = uiState
 
   return (
-
     <div className='chessTable shadow'>
-      {
-        winner &&
-        <Winner winner={winner} />
-      }
-
-      {
-        table.map((row, rowIndex) => {
-
-          return <Row
-            key={rowIndex}
-            row={row}
-            rowIndex={rowIndex}
-            onDropHandler={onDropHandler}
-            table={table}
-            cellSelected={cellSelected}
-            setCellSelected={setCellSelected}
-            turn={turn}
-            gameStarted={gameStarted}
-            setGameStarted={setGameStarted}
-            lastMove={lastMove}
-            isInCheck={isInCheck}
-            setIsInCheck={setIsInCheck}
-            crowningPiece={crowningPiece}
-            setCrowningPiece={setCrowningPiece}
-          />
-
-        })
-      }
+      {winner && <Winner winner={winner} />}
+      {isAIThinking && (
+        <div className='aiThinking'>
+          <span>IA pensando…</span>
+        </div>
+      )}
+      {table.map((row, rowIndex) => (
+        <Row
+          key={rowIndex}
+          row={row}
+          rowIndex={rowIndex}
+          selectedCellId={selectedCell?.id ?? -1}
+          validMoveIds={validMoveIds}
+          lastMoveFromId={lastMoveFromId}
+          lastMoveToId={lastMoveToId}
+          turn={turn}
+          winner={winner}
+          gameStarted={gameStarted}
+          crowningPiece={crowningPiece}
+          onDragStart={handleDragStart}
+          onDrop={handleDrop}
+          onCellClick={handleCellClick}
+          onCrownPiece={handleCrownPiece}
+        />
+      ))}
     </div>
   )
 })
