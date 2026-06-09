@@ -40,7 +40,7 @@ function serializeForWorker(table) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const Table = memo(function Table({ gameState, dispatch, IAOpponent }) {
+export const Table = memo(function Table({ gameState, dispatch, IAOpponent, onAIThinkingChange, onRestart }) {
   const { table, turn, isInCheck, winner, gameStarted, lastMove, crowningPiece } = gameState
 
   const [uiState, setUiState] = useState({
@@ -57,6 +57,10 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent }) {
   gameStateRef.current  = gameState
   uiStateRef.current    = uiState
   IAOpponentRef.current = IAOpponent
+
+  useEffect(() => {
+    onAIThinkingChange?.(uiState.isAIThinking)
+  }, [uiState.isAIThinking, onAIThinkingChange])
 
   // ─── Core move execution (shared: human and AI) ─────────────────────────
 
@@ -264,12 +268,7 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent }) {
 
   return (
     <div className='chessTable shadow'>
-      {winner && <Winner winner={winner} />}
-      {isAIThinking && (
-        <div className='aiThinking'>
-          <span>IA pensando…</span>
-        </div>
-      )}
+      {winner && <Winner winner={winner} onRestart={onRestart} />}
       {table.map((row, rowIndex) => (
         <Row
           key={rowIndex}

@@ -10,8 +10,6 @@ import { gameReducer, createInitialGameState, GAME_ACTIONS } from './reducers/ga
 import createTimeObject        from './utils/createTimeObject'
 import { updateTimeInStorage } from './utils/storage'
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
 const MATERIAL = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 }
 
 function materialScore(pieces) {
@@ -22,18 +20,17 @@ function pad(n) {
   return n >= 10 ? String(n) : `0${n}`
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
 function App() {
   const [gameState, dispatch] = useReducer(gameReducer, null, createInitialGameState)
-  const { turn, winner, gameStarted, capturedPieces, moveHistory } = gameState
+  const { turn, winner, gameStarted, capturedPieces, moveHistory, isInCheck } = gameState
 
   const [time, setTime] = useState(() => {
     const stored = window.localStorage.getItem('time')
     return stored ? JSON.parse(stored) : createTimeObject({ minutes: 120 })
   })
 
-  const [IAOpponent, setIAOpponent] = useState(false)
+  const [IAOpponent, setIAOpponent]   = useState(false)
+  const [isAIThinking, setIsAIThinking] = useState(false)
 
   // ─── Countdown timer ───────────────────────────────────────────────────────
 
@@ -60,10 +57,10 @@ function App() {
     return () => clearInterval(interval)
   }, [winner, gameStarted, turn, handleTimeout])
 
-  // ─── Derived material advantage ───────────────────────────────────────────
+  // ─── Material advantage ────────────────────────────────────────────────────
 
-  const byBlackScore = materialScore(capturedPieces.byBlack)   // black captured these (white pieces)
-  const byWhiteScore = materialScore(capturedPieces.byWhite)   // white captured these (black pieces)
+  const byBlackScore  = materialScore(capturedPieces.byBlack)
+  const byWhiteScore  = materialScore(capturedPieces.byWhite)
   const blackAdvantage = byBlackScore - byWhiteScore
   const whiteAdvantage = byWhiteScore - byBlackScore
 
@@ -74,42 +71,100 @@ function App() {
     setTime(createTimeObject({ minutes: 120 }))
   }, [])
 
+  // ─── Game status text ──────────────────────────────────────────────────────
+
+  function getStatusText() {
+    if (winner)      return winner === 'white' ? '♔ Blancas ganan' : '♚ Negras ganan'
+    if (isAIThinking) return 'IA pensando…'
+    if (isInCheck)   return '¡Jaque!'
+    return `Turno de ${turn === 'white' ? 'Blancas' : 'Negras'}`
+  }
+
+  const statusClass = [
+    'gameStatus',
+    isAIThinking         ? 'thinking' : '',
+    isInCheck && !winner ? 'check'    : '',
+    winner               ? 'end'      : '',
+  ].filter(Boolean).join(' ')
+
+  const blackActive = turn === 'black' && !winner
+  const whiteActive = turn === 'white' && !winner
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="app">
 
-      {/* ── Board column ─────────────────────────── */}
-      <div className="boardColumn">
+      {/* ── Left panel — PlayerCards ─────────────────────── */}
+      <aside className="leftPanel">
 
-        {/* Black player bar */}
-        <div className={`playerBar top ${turn === 'black' && !winner ? 'active' : ''}`}>
-          <span className="playerChip black">●</span>
-          <span className="playerName">Negras</span>
+        {/* Black player card (opponent / top) */}
+        <div className={`playerCard${blackActive ? ' active' : ''}`}>
+          <div className="playerCardHeader">
+            <span className="playerAvatar dark">♚</span>
+            <div className="playerCardMeta">
+              <span className="playerCardName">Negras</span>
+              <span className="playerCardRole">{IAOpponent ? 'IA' : 'Jugador 2'}</span>
+            </div>
+            {blackAdvantage > 0 && (
+              <span className="advantageBadge">+{blackAdvantage}</span>
+            )}
+          </div>
           <CapturedPieces
             captured={capturedPieces.byBlack}
             opponentCaptured={capturedPieces.byWhite}
+            size="lg"
           />
+        </div>
+
+        {/* White player card (you / bottom) */}
+        <div className={`playerCard${whiteActive ? ' active' : ''}`}>
+          <div className="playerCardHeader">
+            <span className="playerAvatar light">♔</span>
+            <div className="playerCardMeta">
+              <span className="playerCardName">Blancas</span>
+              <span className="playerCardRole">Tú</span>
+            </div>
+            {whiteAdvantage > 0 && (
+              <span className="advantageBadge">+{whiteAdvantage}</span>
+            )}
+          </div>
+          <CapturedPieces
+            captured={capturedPieces.byWhite}
+            opponentCaptured={capturedPieces.byBlack}
+            size="lg"
+          />
+        </div>
+
+      </aside>
+
+      {/* ── Board column ─────────────────────────────────── */}
+      <div className="boardColumn">
+
+        {/* Status banner */}
+        <div className={statusClass}>{getStatusText()}</div>
+
+        {/* Black player bar — compact (timer + name) */}
+        <div className={`playerBar top${blackActive ? ' active' : ''}`}>
+          <span className="playerChip">♚</span>
+          <span className="playerName">Negras</span>
           <div className="timerDisplay">
             {pad(time.black.minutes)}:{pad(time.black.seconds)}
           </div>
         </div>
 
-        {/* The board */}
         <Table
           gameState={gameState}
           dispatch={dispatch}
           IAOpponent={IAOpponent}
+          onAIThinkingChange={setIsAIThinking}
+          onRestart={handleRestart}
         />
 
-        {/* White player bar */}
-        <div className={`playerBar bottom ${turn === 'white' && !winner ? 'active' : ''}`}>
-          <span className="playerChip white">○</span>
+        {/* White player bar — compact (timer + name) */}
+        <div className={`playerBar bottom${whiteActive ? ' active' : ''}`}>
+          <span className="playerChip">♔</span>
           <span className="playerName">Blancas</span>
-          <CapturedPieces
-            captured={capturedPieces.byWhite}
-            opponentCaptured={capturedPieces.byBlack}
-          />
           <div className="timerDisplay">
             {pad(time.white.minutes)}:{pad(time.white.seconds)}
           </div>
@@ -117,19 +172,26 @@ function App() {
 
       </div>
 
-      {/* ── Side panel ───────────────────────────── */}
-      <div className="sidePanel">
+      {/* ── Side panel (right) ───────────────────────────── */}
+      <aside className="sidePanel">
         <div className="controls">
           <RestartGame onRestart={handleRestart} />
           <button
-            className={`aiToggle ${IAOpponent ? 'activated' : ''}`}
+            className={`aiToggle${IAOpponent ? ' activated' : ''}`}
             onClick={() => setIAOpponent(v => !v)}
           >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <circle cx="12" cy="5" r="2"/>
+              <path d="M12 7v4"/>
+              <circle cx="8.5" cy="16" r="1" fill="currentColor" stroke="none"/>
+              <circle cx="15.5" cy="16" r="1" fill="currentColor" stroke="none"/>
+            </svg>
             {IAOpponent ? 'Desactivar IA' : 'Activar IA'}
           </button>
         </div>
         <MoveHistory history={moveHistory} />
-      </div>
+      </aside>
 
     </div>
   )

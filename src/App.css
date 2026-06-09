@@ -1,4 +1,4 @@
-/* ─── Reset & tokens ─────────────────────────────────────────────────────── */
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -6,29 +6,61 @@
   padding: 0;
 }
 
-:root {
-  --bg:          #1a1a2e;
-  --panel:       #16213e;
-  --panel-light: #1e2d4a;
-  --border:      #2a3f5f;
-  --accent:      #e2c97e;
-  --accent-dim:  rgba(226, 201, 126, 0.15);
-  --text:        #e8e6e3;
-  --text-dim:    #8a9ab5;
-  --cell-light:  #f0d9b5;
-  --cell-dark:   #b58863;
-  --check-red:   rgba(220, 30, 30, 0.88);
-  --shadow:      0 4px 24px rgba(0, 0, 0, 0.55);
-  --cell:        90px;
-}
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
 
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
+:root {
+  --bg-1:        #0f1419;
+  --bg-2:        #181e2d;
+  --panel:       rgba(28, 33, 50, 0.75);
+  --panel-solid: #1b2133;
+  --panel-hi:    rgba(42, 50, 72, 0.82);
+  --border-soft: rgba(255, 255, 255, 0.07);
+  --border-gold: rgba(212, 165, 116, 0.22);
+  --accent:      #d4a574;
+  --accent-hi:   #e8c391;
+  --accent-dim:  rgba(212, 165, 116, 0.12);
+  --text:        #e8e6e3;
+  --text-dim:    #94a3b8;
+  --text-mute:   #576579;
+  --cell-light:  #ebd9b5;
+  --cell-dark:   #a87f5e;
+  --check-red:   #ef4444;
+  --shadow-xl:   0 28px 72px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 8px 28px rgba(0, 0, 0, 0.4);
+  --shadow-sm:   0 2px 10px rgba(0, 0, 0, 0.35);
+  --cell:        88px;
+  --radius:      14px;
+  --radius-sm:   8px;
+
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 15px;
   line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+}
+
+/* ─── Background ─────────────────────────────────────────────────────────── */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(145deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  color: var(--text);
+}
+
+/* Golden center radiance */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 55% at 50% -5%,
+    rgba(212, 165, 116, 0.07) 0%,
+    transparent 65%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 #root {
@@ -36,95 +68,108 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
-/* ─── App layout ─────────────────────────────────────────────────────────── */
+/* ─── App — 3-column grid ────────────────────────────────────────────────── */
 
 .app {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 240px auto 240px;
   gap: 20px;
-  padding: 24px;
+  align-items: center;
+  padding: 32px;
 }
 
-/* ─── Board column ───────────────────────────────────────────────────────── */
+/* ─── Left panel — PlayerCards ───────────────────────────────────────────── */
 
-.boardColumn {
+.leftPanel {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-/* ─── Player bar ─────────────────────────────────────────────────────────── */
-
-.playerBar {
-  width: 100%;
-  height: 52px;
+.playerCard {
   background: var(--panel);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.playerCard.active {
+  border-color: var(--border-gold);
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.18),
+              0 0 36px rgba(212, 165, 116, 0.09);
+}
+
+.playerCardHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  transition: border-color 0.25s ease, background 0.25s ease;
+  gap: 12px;
 }
 
-.playerBar.top  { border-radius: 10px 10px 0 0; border-bottom: none; }
-.playerBar.bottom { border-radius: 0 0 10px 10px; border-top: none; }
-
-.playerBar.active {
-  background: var(--panel-light);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent) inset;
-}
-
-.playerChip {
-  font-size: 10px;
-  width: 18px;
-  height: 18px;
+.playerAvatar {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 22px;
   flex-shrink: 0;
+  line-height: 1;
 }
 
-.playerChip.black {
-  background: #2a2a2a;
-  color: #ddd;
-  border: 1px solid #555;
+.playerAvatar.dark {
+  background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.playerChip.white {
-  background: #f5f5f0;
-  color: #333;
-  border: 1px solid #aaa;
+.playerAvatar.light {
+  background: linear-gradient(145deg, #f2ede4, #d4cdc0);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: #3a3020;
 }
 
-.playerName {
-  font-size: 13px;
+.playerCardMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.playerCardName {
+  display: block;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   color: var(--text);
-  min-width: 54px;
+  line-height: 1.2;
 }
 
-.timerDisplay {
-  margin-left: auto;
-  font-size: 16px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  letter-spacing: 0.03em;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 6px;
-  min-width: 70px;
-  text-align: center;
-  flex-shrink: 0;
+.playerCardRole {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-top: 3px;
 }
 
-.playerBar.active .timerDisplay {
+.advantageBadge {
+  font-size: 14px;
+  font-weight: 700;
   color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(212, 165, 116, 0.28);
+  border-radius: 7px;
+  padding: 3px 9px;
+  flex-shrink: 0;
 }
 
 /* ─── Captured pieces ────────────────────────────────────────────────────── */
@@ -132,26 +177,37 @@ html, body {
 .capturedPieces {
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex: 1;
-  overflow: hidden;
+  gap: 4px;
+  min-height: 22px;
+}
+
+.capturedLg {
+  min-height: 28px;
 }
 
 .capturedIcons {
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
+  align-items: center;
 }
 
 .capturedIcon {
   width: 18px;
   height: 18px;
   margin-left: -4px;
-  opacity: 0.85;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+  opacity: 0.88;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
 
 .capturedIcon:first-child { margin-left: 0; }
+
+.capturedLg .capturedIcon {
+  width: 26px;
+  height: 26px;
+  margin-left: -8px;
+}
+
+.capturedLg .capturedIcon:first-child { margin-left: 0; }
 
 .materialAdvantage {
   font-size: 12px;
@@ -161,24 +217,153 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ─── Board wrapper ──────────────────────────────────────────────────────── */
+.capturedLg .materialAdvantage {
+  font-size: 14px;
+}
 
-/* chessTable is placed directly — labels now live inside the cells */
+/* ─── Board column ───────────────────────────────────────────────────────── */
+
+.boardColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ─── Game status banner ─────────────────────────────────────────────────── */
+
+.gameStatus {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-mute);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-soft);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition: color 0.25s ease;
+}
+
+.gameStatus.thinking {
+  color: var(--accent);
+  animation: statusPulse 1.3s ease-in-out infinite;
+}
+
+.gameStatus.check {
+  color: var(--check-red);
+  letter-spacing: 0.06em;
+}
+
+.gameStatus.end {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* ─── Player bars (compact — timer + name only) ──────────────────────────── */
+
+.playerBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-soft);
+  border-top: none;
+  border-bottom: none;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.playerBar.top {
+  /* gameStatus provides the top border visually; board provides bottom */
+}
+
+.playerBar.bottom {
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.playerBar.active {
+  background: var(--panel-hi);
+}
+
+.playerBar.active.top {
+  border-color: var(--border-gold);
+  border-top: none;
+  border-bottom: none;
+}
+
+.playerBar.active.bottom {
+  border-color: var(--border-gold);
+  border-top: none;
+}
+
+.playerChip {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.playerBar.active .playerChip {
+  opacity: 1;
+}
+
+.playerName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  transition: color 0.25s ease;
+}
+
+.playerBar.active .playerName {
+  color: var(--text);
+}
+
+.timerDisplay {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  min-width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.playerBar.active .timerDisplay {
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(212, 165, 116, 0.45);
+}
 
 /* ─── Chess board ────────────────────────────────────────────────────────── */
 
 .chessTable {
   position: relative;
-  border: 2px solid #0d1520;
-  border-radius: 0;
-  box-shadow: var(--shadow), 0 0 0 1px var(--border);
+  border: 7px solid #17110d;
+  box-shadow: var(--shadow-xl);
+  display: block;
+  outline: 1px solid rgba(0, 0, 0, 0.6);
 }
-
-/* Corner rounding for the outer cells */
-[id="0"]  { border-top-left-radius:  4px; }
-[id="7"]  { border-top-right-radius: 4px; }
-[id="56"] { border-bottom-left-radius:  4px; }
-[id="63"] { border-bottom-right-radius: 4px; }
 
 /* ─── Chess cell ─────────────────────────────────────────────────────────── */
 
@@ -188,41 +373,45 @@ html, body {
   height: var(--cell);
   position: relative;
   user-select: none;
-  transition: background-color 0.07s ease;
+  cursor: default;
 }
 
-.white { background-color: var(--cell-light); }
-.black { background-color: var(--cell-dark);  }
+.chessCell.white { background-color: var(--cell-light); }
+.chessCell.black { background-color: var(--cell-dark);  }
 
 .chessCell.selected {
-  background-color: #d4c44a;
+  background-color: rgba(212, 165, 116, 0.5);
 }
 
+/* Last move tint */
 .chessCell.lastMove::after {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(100, 220, 80, 0.22);
+  background: rgba(212, 165, 116, 0.26);
   pointer-events: none;
   z-index: 0;
 }
 
+/* Valid move — hollow dot for empty squares */
 .chessCell.isValidMove::after {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 30%;
-  height: 30%;
-  background-color: rgba(0, 0, 0, 0.22);
+  width: 28%;
+  height: 28%;
+  background: rgba(15, 20, 28, 0.26);
   border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(15, 20, 28, 0.09);
   pointer-events: none;
   z-index: 0;
 }
 
+/* Capturable piece — ring */
 .chessCell.eatable {
-  outline: 3px solid rgba(0, 0, 0, 0.35);
+  outline: 3px solid rgba(239, 68, 68, 0.65);
   outline-offset: -3px;
 }
 
@@ -230,32 +419,31 @@ html, body {
   display: flex;
 }
 
-/* ─── In-cell coordinate labels ─────────────────────────────────────────── */
+/* Corner rounding of board cells */
+[id="0"]  { border-top-left-radius:  2px; }
+[id="7"]  { border-top-right-radius: 2px; }
+[id="56"] { border-bottom-left-radius:  2px; }
+[id="63"] { border-bottom-right-radius: 2px; }
+
+/* ─── Coordinate labels ──────────────────────────────────────────────────── */
 
 .cellLabel {
   position: absolute;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   pointer-events: none;
   z-index: 2;
   line-height: 1;
+  opacity: 0.52;
 }
 
-.rankLabel {
-  top: 4px;
-  left: 5px;
-}
+.rankLabel { top: 4px;    left: 5px;  }
+.fileLabel { bottom: 4px; right: 5px; }
 
-.fileLabel {
-  bottom: 4px;
-  right: 5px;
-}
-
-/* Opposite-color labels (chess.com convention) */
-.chessCell.white .cellLabel { color: var(--cell-dark); }
+.chessCell.white .cellLabel { color: var(--cell-dark);  }
 .chessCell.black .cellLabel { color: var(--cell-light); }
 
-/* ─── Chess piece ────────────────────────────────────────────────────────── */
+/* ─── Chess pieces ───────────────────────────────────────────────────────── */
 
 .chessPiece {
   position: absolute;
@@ -263,55 +451,34 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: 1;
-  mask-image: radial-gradient(black 70%, transparent 82%);
   cursor: pointer;
-  transition: background-color 0.15s ease;
   transform-origin: center;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+  transition: filter 0.15s ease;
+}
+
+.chessPiece:hover {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)) brightness(1.06);
 }
 
 .chessPiece.end {
   pointer-events: none;
 }
 
-/* Check glow — animated pulse */
+/* Check glow pulse */
 @keyframes checkPulse {
-  0%,100% { background-color: rgba(220, 30, 30, 0.9); }
-  50%     { background-color: rgba(255, 80, 80, 0.25); }
+  0%, 100% {
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45))
+            drop-shadow(0 0 14px rgba(239, 68, 68, 1));
+  }
+  50% {
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45))
+            drop-shadow(0 0 3px rgba(239, 68, 68, 0.2));
+  }
 }
 
 .chessPiece.checked {
-  mask-image: radial-gradient(black 45%, transparent 78%);
   animation: checkPulse 0.85s ease-in-out infinite;
-}
-
-/* ─── AI thinking indicator ──────────────────────────────────────────────── */
-
-.aiThinking {
-  z-index: 2;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  padding-bottom: 14px;
-  pointer-events: none;
-}
-
-@keyframes aiPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-
-.aiThinking span {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgba(10, 10, 20, 0.85);
-  padding: 5px 14px;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  animation: aiPulse 1.1s ease-in-out infinite;
-  border: 1px solid rgba(226, 201, 126, 0.3);
 }
 
 /* ─── Winner overlay ─────────────────────────────────────────────────────── */
@@ -320,8 +487,9 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,26 +497,35 @@ html, body {
 }
 
 .winnerCard {
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: 14px;
-  padding: 28px 40px;
+  background: radial-gradient(ellipse at 50% 0%,
+    rgba(212, 165, 116, 0.14),
+    transparent 65%),
+    var(--panel-solid);
+  border: 1px solid rgba(212, 165, 116, 0.4);
+  border-radius: var(--radius);
+  padding: 40px 52px;
   text-align: center;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  box-shadow: 0 12px 56px rgba(0, 0, 0, 0.75),
+              0 0 0 1px rgba(212, 165, 116, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .winnerIcon {
   display: block;
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 60px;
   line-height: 1;
+  filter: drop-shadow(0 0 28px rgba(212, 165, 116, 0.75));
+  margin-bottom: 4px;
 }
 
 .winnerTitle {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 6px;
+  letter-spacing: -0.01em;
 }
 
 .winnerSub {
@@ -356,52 +533,83 @@ html, body {
   color: var(--text-dim);
 }
 
+.winnerRestart {
+  margin-top: 12px;
+  padding: 11px 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(212, 165, 116, 0.45);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.winnerRestart:hover {
+  background: rgba(212, 165, 116, 0.22);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.winnerRestart:active {
+  transform: translateY(0);
+}
+
 /* ─── Pawn promotion picker ──────────────────────────────────────────────── */
 
 .crownedContainer {
   position: absolute;
   z-index: 20;
-  top: -82px;
+  top: -96px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 8px;
+  background: var(--panel-solid);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(212, 165, 116, 0.32);
+  border-radius: 12px;
+  padding: 10px;
   display: flex;
-  gap: 6px;
-  box-shadow: var(--shadow);
+  gap: 8px;
+  box-shadow: var(--shadow-md);
 }
 
 .crownablePiece {
-  width: 56px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border);
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-soft);
   cursor: pointer;
-  transition: background 0.1s ease, border-color 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
 }
 
 .crownablePiece:hover {
   background: var(--accent-dim);
-  border-color: var(--accent);
+  border-color: rgba(212, 165, 116, 0.5);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
 }
 
 .crownablePieceImage {
   width: 100%;
   height: 100%;
   display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
 }
 
-/* ─── Side panel ─────────────────────────────────────────────────────────── */
+/* ─── Side panel (right) ─────────────────────────────────────────────────── */
 
 .sidePanel {
-  width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  align-self: flex-start;
-  padding-top: 4px;
+  gap: 12px;
 }
 
 /* ─── Controls ───────────────────────────────────────────────────────────── */
@@ -415,120 +623,186 @@ html, body {
 .restartGame,
 .aiToggle {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
   background: var(--panel);
-  color: var(--text);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-dim);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
   font-family: inherit;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: 0.01em;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
 
 .restartGame:hover,
 .aiToggle:hover {
-  background: var(--panel-light);
-  border-color: var(--text-dim);
+  background: var(--panel-hi);
+  border-color: rgba(212, 165, 116, 0.28);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .restartGame:active,
 .aiToggle:active {
-  background: #0d1520;
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .aiToggle.activated {
   background: var(--accent-dim);
-  border-color: var(--accent);
+  border-color: rgba(212, 165, 116, 0.38);
   color: var(--accent);
 }
 
 .aiToggle.activated:hover {
-  background: rgba(226, 201, 126, 0.22);
+  background: rgba(212, 165, 116, 0.2);
+  border-color: var(--accent);
 }
 
 /* ─── Move history ───────────────────────────────────────────────────────── */
 
 .moveHistory {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  max-height: 420px;
+  max-height: 380px;
 }
 
 .moveHistoryTitle {
-  padding: 10px 14px 8px;
+  padding: 11px 14px 9px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border);
+  color: var(--text-mute);
+  border-bottom: 1px solid var(--border-soft);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .moveHistoryList {
   overflow-y: auto;
-  padding: 6px 0;
+  padding: 4px 0;
   flex: 1;
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: rgba(212, 165, 116, 0.18) transparent;
 }
 
-.moveHistoryList::-webkit-scrollbar       { width: 4px; }
+.moveHistoryList::-webkit-scrollbar       { width: 3px; }
 .moveHistoryList::-webkit-scrollbar-track { background: transparent; }
-.moveHistoryList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.moveHistoryList::-webkit-scrollbar-thumb {
+  background: rgba(212, 165, 116, 0.22);
+  border-radius: 2px;
+}
 
 .moveHistoryEmpty {
   display: block;
-  padding: 12px 14px;
+  padding: 18px 14px;
   font-size: 12px;
-  color: var(--text-dim);
+  color: var(--text-mute);
   font-style: italic;
+  text-align: center;
 }
 
 .movePair {
   display: grid;
   grid-template-columns: 26px 1fr 1fr;
   align-items: center;
-  padding: 3px 14px;
+  padding: 4px 12px;
   font-size: 13px;
-  gap: 4px;
-  border-radius: 4px;
+  gap: 2px;
   transition: background 0.1s ease;
 }
 
-.movePair:hover { background: var(--panel-light); }
+.movePair:hover { background: var(--accent-dim); }
 
 .moveNumber {
-  color: var(--text-dim);
+  color: var(--text-mute);
   font-size: 11px;
   font-weight: 600;
+  text-align: right;
+  padding-right: 4px;
 }
 
 .moveWhite {
-  color: var(--text);
+  color: var(--text-dim);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
 }
 
 .moveBlack {
-  color: var(--text-dim);
+  color: var(--text-mute);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
 }
 
-/* Highlight last move pair */
-.movePair:last-child .moveWhite,
-.movePair:last-child .moveBlack {
-  color: var(--text);
+/* Last pair highlighted in gold */
+.movePair.last .moveWhite {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.movePair.last .moveBlack {
+  color: var(--accent);
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 1240px) {
+  :root { --cell: 76px; }
+  .app {
+    grid-template-columns: 210px auto 210px;
+    gap: 14px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 1020px) {
+  :root { --cell: 60px; }
+  .app {
+    grid-template-columns: 180px auto 180px;
+    gap: 12px;
+    padding: 16px;
+  }
+  .playerAvatar { width: 34px; height: 34px; font-size: 18px; }
+  .playerCardName { font-size: 13px; }
+}
+
+@media (max-width: 860px) {
+  :root { --cell: 52px; }
+  .app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    gap: 12px;
+  }
+  .leftPanel { flex-direction: row; width: 100%; max-width: 540px; }
+  .playerCard { flex: 1; }
+  .sidePanel  { width: 100%; max-width: 540px; flex-direction: row; align-items: flex-start; }
+  .controls   { flex-direction: row; }
+  .restartGame, .aiToggle { flex: 1; }
+  .moveHistory { flex: 1; max-height: 220px; }
 }
