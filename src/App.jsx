@@ -12,6 +12,12 @@ import { updateTimeInStorage } from './utils/storage'
 
 const MATERIAL = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 }
 
+const DIFFICULTY_LEVELS = [
+  { key: 'easy',   label: 'Fácil',   depth: 2 },
+  { key: 'medium', label: 'Medio',   depth: 4 },
+  { key: 'hard',   label: 'Difícil', depth: 6 },
+]
+
 function materialScore(pieces) {
   return pieces.reduce((s, p) => s + MATERIAL[p.type], 0)
 }
@@ -31,6 +37,9 @@ function App() {
 
   const [IAOpponent, setIAOpponent]   = useState(false)
   const [isAIThinking, setIsAIThinking] = useState(false)
+  const [difficulty, setDifficulty]   = useState('medium')
+
+  const aiDepth = DIFFICULTY_LEVELS.find(d => d.key === difficulty).depth
 
   // ─── Countdown timer ───────────────────────────────────────────────────────
 
@@ -157,6 +166,7 @@ function App() {
           gameState={gameState}
           dispatch={dispatch}
           IAOpponent={IAOpponent}
+          aiDepth={aiDepth}
           onAIThinkingChange={setIsAIThinking}
           onRestart={handleRestart}
         />
@@ -189,6 +199,18 @@ function App() {
             </svg>
             {IAOpponent ? 'Desactivar IA' : 'Activar IA'}
           </button>
+          <div className={`difficultySelector${IAOpponent ? '' : ' disabled'}`}>
+            {DIFFICULTY_LEVELS.map(({ key, label }) => (
+              <button
+                key={key}
+                className={`difficultyBtn${difficulty === key ? ' active' : ''}`}
+                disabled={!IAOpponent}
+                onClick={() => setDifficulty(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <MoveHistory history={moveHistory} />
       </aside>

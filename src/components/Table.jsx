@@ -40,7 +40,7 @@ function serializeForWorker(table) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const Table = memo(function Table({ gameState, dispatch, IAOpponent, onAIThinkingChange, onRestart }) {
+export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDepth, onAIThinkingChange, onRestart }) {
   const { table, turn, isInCheck, winner, gameStarted, lastMove, crowningPiece } = gameState
 
   const [uiState, setUiState] = useState({
@@ -171,10 +171,10 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, onAI
 
     // Transfer the typed array buffers so the worker gets zero-copy ownership
     workerRef.current.postMessage(
-      { board, hasMoved, depth: 4 },
+      { board, hasMoved, depth: aiDepth },
       [board.buffer, hasMoved.buffer]
     )
-  }, [turn, IAOpponent, crowningPiece, winner])
+  }, [turn, IAOpponent, crowningPiece, winner, aiDepth])
 
   // ─── Human interaction handlers ─────────────────────────────────────────
 

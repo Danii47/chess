@@ -668,6 +668,61 @@ body::before {
   border-color: var(--accent);
 }
 
+/* ─── Difficulty selector ────────────────────────────────────────────────── */
+
+.difficultySelector {
+  display: flex;
+  gap: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.difficultySelector.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.difficultyBtn {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.difficultyBtn:hover:not(:disabled) {
+  background: var(--panel-hi);
+  border-color: rgba(212, 165, 116, 0.28);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.difficultyBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.difficultyBtn.active {
+  background: var(--accent-dim);
+  border-color: rgba(212, 165, 116, 0.38);
+  color: var(--accent);
+}
+
+.difficultyBtn.active:hover {
+  background: rgba(212, 165, 116, 0.2);
+  border-color: var(--accent);
+}
+
 /* ─── Move history ───────────────────────────────────────────────────────── */
 
 .moveHistory {
