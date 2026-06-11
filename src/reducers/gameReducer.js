@@ -79,7 +79,7 @@ export function gameReducer(state, action) {
             to: action.toCoord,
             captured: action.capturedPiece,
             isCheck: action.isInCheck && !action.winner,
-            isCheckmate: Boolean(action.winner)
+            isCheckmate: action.winner != null && action.winner !== 'draw'
           }
         : null
 

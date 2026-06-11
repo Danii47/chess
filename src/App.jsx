@@ -13,9 +13,9 @@ import { updateTimeInStorage } from './utils/storage'
 const MATERIAL = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 }
 
 const DIFFICULTY_LEVELS = [
-  { key: 'easy',   label: 'Fácil',   depth: 2 },
-  { key: 'medium', label: 'Medio',   depth: 4 },
-  { key: 'hard',   label: 'Difícil', depth: 6 },
+  { key: 'easy',   label: 'Fácil',   depth: 2, minThinkMs: 800 },
+  { key: 'medium', label: 'Medio',   depth: 4, minThinkMs: 600 },
+  { key: 'hard',   label: 'Difícil', depth: 6, minThinkMs: 0 },
 ]
 
 function materialScore(pieces) {
@@ -39,7 +39,7 @@ function App() {
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [difficulty, setDifficulty]   = useState('medium')
 
-  const aiDepth = DIFFICULTY_LEVELS.find(d => d.key === difficulty).depth
+  const { depth: aiDepth, minThinkMs: aiMinThinkMs } = DIFFICULTY_LEVELS.find(d => d.key === difficulty)
 
   // ─── Countdown timer ───────────────────────────────────────────────────────
 
@@ -83,6 +83,7 @@ function App() {
   // ─── Game status text ──────────────────────────────────────────────────────
 
   function getStatusText() {
+    if (winner === 'draw') return 'Tablas — Rey ahogado'
     if (winner)      return winner === 'white' ? '♔ Blancas ganan' : '♚ Negras ganan'
     if (isAIThinking) return 'IA pensando…'
     if (isInCheck)   return '¡Jaque!'
@@ -167,6 +168,7 @@ function App() {
           dispatch={dispatch}
           IAOpponent={IAOpponent}
           aiDepth={aiDepth}
+          aiMinThinkMs={aiMinThinkMs}
           onAIThinkingChange={setIsAIThinking}
           onRestart={handleRestart}
         />

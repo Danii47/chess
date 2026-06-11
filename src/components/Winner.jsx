@@ -6,14 +6,16 @@ export default function Winner({ winner, onRestart }) {
     onRestart?.()
   }
 
+  const isDraw = winner === 'draw'
+
   return (
     <div className="winnerOverlay">
       <div className="winnerCard">
-        <span className="winnerIcon">{winner === 'white' ? '♔' : '♚'}</span>
+        <span className="winnerIcon">{isDraw ? '½' : winner === 'white' ? '♔' : '♚'}</span>
         <h2 className="winnerTitle">
-          {winner === 'white' ? 'Blancas' : 'Negras'} ganan
+          {isDraw ? 'Tablas' : `${winner === 'white' ? 'Blancas' : 'Negras'} ganan`}
         </h2>
-        <p className="winnerSub">¡Jaque mate!</p>
+        <p className="winnerSub">{isDraw ? 'Rey ahogado' : '¡Jaque mate!'}</p>
         {onRestart && (
           <button className="winnerRestart" onClick={handleRestart}>
             Nueva partida

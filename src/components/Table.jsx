@@ -40,7 +40,7 @@ function serializeForWorker(table) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDepth, onAIThinkingChange, onRestart }) {
+export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDepth, aiMinThinkMs, onAIThinkingChange, onRestart }) {
   const { table, turn, isInCheck, winner, gameStarted, lastMove, crowningPiece } = gameState
 
   const [uiState, setUiState] = useState({
@@ -49,14 +49,18 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDe
     isAIThinking: false
   })
 
-  const gameStateRef   = useRef(gameState)
-  const uiStateRef     = useRef(uiState)
-  const IAOpponentRef  = useRef(IAOpponent)
-  const workerRef      = useRef(null)
+  const gameStateRef    = useRef(gameState)
+  const uiStateRef      = useRef(uiState)
+  const IAOpponentRef   = useRef(IAOpponent)
+  const aiMinThinkMsRef = useRef(aiMinThinkMs)
+  const aiRequestTimeRef = useRef(0)
+  const aiTimeoutRef    = useRef(null)
+  const workerRef       = useRef(null)
 
-  gameStateRef.current  = gameState
-  uiStateRef.current    = uiState
-  IAOpponentRef.current = IAOpponent
+  gameStateRef.current    = gameState
+  uiStateRef.current      = uiState
+  IAOpponentRef.current   = IAOpponent
+  aiMinThinkMsRef.current = aiMinThinkMs
 
   useEffect(() => {
     onAIThinkingChange?.(uiState.isAIThinking)
@@ -82,14 +86,17 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDe
     if (comprobateCheck(tableCopy, nextTurn, false)) return
 
     const check = comprobateCheck(tableCopy, turn, true)
+    const opponentHasNoMoves = comprobateCheckMate(tableCopy, turn)
 
-    if (check && comprobateCheckMate(tableCopy, turn)) {
-      checkMateAudio.play()
-      confetti({ particleCount: 200, spread: 130, origin: { y: .6 } })
+    if (opponentHasNoMoves) {
+      if (check) {
+        checkMateAudio.play()
+        confetti({ particleCount: 200, spread: 130, origin: { y: .6 } })
+      }
       dispatch({
         type: GAME_ACTIONS.MOVE_PIECE,
         table: tableCopy, nextTurn, isInCheck: check,
-        winner: turn, lastMove: { from: fromCell, to: toCell }, crowningPiece: null,
+        winner: check ? turn : 'draw', lastMove: { from: fromCell, to: toCell }, crowningPiece: null,
         capturedPiece, movedPiece, fromCoord, toCoord
       })
       saveGameToStorage(tableCopy, nextTurn)
@@ -122,33 +129,47 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDe
 
     workerRef.current.onmessage = (e) => {
       const aiMove = e.data    // { from, to } | null
-      setUiState(prev => ({ ...prev, isAIThinking: false }))
 
-      if (!aiMove) return      // stalemate / no moves
+      const applyAIMove = () => {
+        setUiState(prev => ({ ...prev, isAIThinking: false }))
 
-      const { table, turn, winner, crowningPiece } = gameStateRef.current
-      // Guard against stale responses (game reset, IA toggled off, etc.)
-      if (winner || crowningPiece || turn === 'white' || !IAOpponentRef.current) return
+        if (!aiMove) return      // stalemate / no moves
 
-      const tableCopy = JSON.parse(JSON.stringify(table))
-      setBoardFunctions(tableCopy)
+        const { table, turn, winner, crowningPiece } = gameStateRef.current
+        // Guard against stale responses (game reset, IA toggled off, etc.)
+        if (winner || crowningPiece || turn === 'white' || !IAOpponentRef.current) return
 
-      const fromCell = tableCopy.flat().find(c => c.id === aiMove.from)
-      const toCell   = tableCopy.flat().find(c => c.id === aiMove.to)
-      if (!fromCell || !toCell) return
+        const tableCopy = JSON.parse(JSON.stringify(table))
+        setBoardFunctions(tableCopy)
 
-      // AI pawns auto-promote to queen (promotes piece type before executeMove
-      // sees it, so isPawnPromotion check evaluates to false — no UI shown)
-      if (fromCell.piece?.type === PIECES.PAWN) {
-        const isPromotion = (fromCell.piece.color === 'black' && toCell.y === 7)
-                         || (fromCell.piece.color === 'white' && toCell.y === 0)
-        if (isPromotion) {
-          fromCell.piece.type = PIECES.QUEEN
-          fromCell.piece.getPossibleMoves = getPossibleMoves
+        const fromCell = tableCopy.flat().find(c => c.id === aiMove.from)
+        const toCell   = tableCopy.flat().find(c => c.id === aiMove.to)
+        if (!fromCell || !toCell) return
+
+        // AI pawns auto-promote to queen (promotes piece type before executeMove
+        // sees it, so isPawnPromotion check evaluates to false — no UI shown)
+        if (fromCell.piece?.type === PIECES.PAWN) {
+          const isPromotion = (fromCell.piece.color === 'black' && toCell.y === 7)
+                           || (fromCell.piece.color === 'white' && toCell.y === 0)
+          if (isPromotion) {
+            fromCell.piece.type = PIECES.QUEEN
+            fromCell.piece.getPossibleMoves = getPossibleMoves
+          }
         }
+
+        executeMove(tableCopy, fromCell, toCell)
       }
 
-      executeMove(tableCopy, fromCell, toCell)
+      // Easy/medium difficulties resolve almost instantly — enforce a minimum
+      // "thinking" delay so the move doesn't feel jarring/confusing to the user.
+      const elapsed   = performance.now() - aiRequestTimeRef.current
+      const remaining = aiMinThinkMsRef.current - elapsed
+
+      if (remaining > 0) {
+        aiTimeoutRef.current = setTimeout(applyAIMove, remaining)
+      } else {
+        applyAIMove()
+      }
     }
 
     workerRef.current.onerror = (err) => {
@@ -156,7 +177,11 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDe
       setUiState(prev => ({ ...prev, isAIThinking: false }))
     }
 
-    return () => { workerRef.current?.terminate(); workerRef.current = null }
+    return () => {
+      if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current)
+      workerRef.current?.terminate()
+      workerRef.current = null
+    }
   }, [executeMove])
 
   // ─── AI trigger ─────────────────────────────────────────────────────────
@@ -168,6 +193,7 @@ export const Table = memo(function Table({ gameState, dispatch, IAOpponent, aiDe
     const { board, hasMoved } = serializeForWorker(table)
 
     setUiState(prev => ({ ...prev, isAIThinking: true }))
+    aiRequestTimeRef.current = performance.now()
 
     // Transfer the typed array buffers so the worker gets zero-copy ownership
     workerRef.current.postMessage(
